@@ -1,0 +1,393 @@
+import { Response } from 'express';
+import { supabaseAdmin } from '../utils/supabase';
+import { AuthRequest } from '../middleware/auth';
+import { generateRandomPassword, hashPassword } from './authController';
+import { body, validationResult } from 'express-validator';
+
+// Validation rules for employee creation
+export const validateEmployeeCreation = [
+  body('full_name').trim().isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
+  body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('nik').trim().isLength({ min: 3 }).withMessage('NIK must be at least 3 characters'),
+  body('division').trim().isLength({ min: 2 }).withMessage('Division is required'),
+  body('employment_type').isIn(['Permanent', 'Contract']).withMessage('Employment type must be Permanent or Contract'),
+  body('leave_balance').isInt({ min: 0 }).withMessage('Leave balance must be a positive number'),
+  body('start_date').isISO8601().withMessage('Valid start date is required'),
+  body('role').optional().isIn(['Employee', 'Manager', 'Admin']).withMessage('Role must be Employee, Manager, or Admin'),
+  body('manager_id').optional().isUUID().withMessage('Manager ID must be a valid UUID'),
+  body('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be less than 20 characters'),
+  body('address').optional().trim().isLength({ max: 500 }).withMessage('Address must be less than 500 characters'),
+  body('position').optional().trim().isLength({ max: 100 }).withMessage('Position must be less than 100 characters'),
+];
+
+// Create new employee (Admin only)
+export const createEmployee = async (req: AuthRequest, res: Response) => {
+  try {
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {
+      full_name,
+      email,
+      nik,
+      division,
+      employment_type,
+      leave_balance,
+      start_date,
+      role = 'Employee',
+      manager_id,
+      phone,
+      address,
+      position,
+
+    } = req.body;
+
+    // Generate random password
+    const plainPassword = generateRandomPassword();
+    const password_hash = await hashPassword(plainPassword);
+
+    // Check if NIK already exists
+    const { data: existingNik } = await supabaseAdmin
+      .from('employees')
+      .select('nik')
+      .eq('nik', nik);
+
+    if (existingNik && existingNik.length > 0) {
+      return res.status(400).json({ error: 'NIK already exists' });
+    }
+
+    // Check if email already exists (only if email is provided)
+    if (email) {
+      const { data: existingEmail } = await supabaseAdmin
+        .from('employees')
+        .select('email')
+        .eq('email', email.toLowerCase());
+
+      if (existingEmail && existingEmail.length > 0) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+    }
+
+    // Validate manager exists if manager_id is provided
+    if (manager_id) {
+      const { data: manager } = await supabaseAdmin
+        .from('employees')
+        .select('id, role')
+        .eq('id', manager_id)
+        .eq('status', 'Active')
+        .single();
+
+      if (!manager) {
+        return res.status(400).json({ error: 'Invalid manager ID' });
+      }
+
+      if (manager.role !== 'Manager' && manager.role !== 'Admin') {
+        return res.status(400).json({ error: 'Assigned manager must have Manager or Admin role' });
+      }
+    }
+
+    // Create employee
+    const { data: newEmployee, error } = await supabaseAdmin
+      .from('employees')
+      .insert({
+        full_name,
+        email: email.toLowerCase(),
+        nik,
+        division,
+        employment_type,
+        leave_balance,
+        start_date,
+        role,
+        manager_id: manager_id || null,
+        password_hash,
+        phone: phone || '',
+        address: address || '',
+        position: position || division,
+
+        password_changed: false,
+        status: 'Active'
+      })
+      .select(`
+        id, full_name, email, nik, division, employment_type,
+        leave_balance, start_date, role, status, created_at,
+        phone, address, position, password_changed,
+        manager:manager_id(id, full_name, email)
+      `)
+      .single();
+
+    if (error) {
+      console.error('Create employee error:', error);
+      return res.status(500).json({ error: 'Failed to create employee' });
+    }
+
+    res.status(201).json({
+      message: 'Employee created successfully',
+      employee: newEmployee,
+      temporary_password: plainPassword
+    });
+  } catch (error) {
+    console.error('Create employee error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get all employees (Admin and Manager)
+export const getAllEmployees = async (req: AuthRequest, res: Response) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      search, 
+      department, 
+      manager, 
+      hireDateFrom, 
+      hireDateTo, 
+      employmentType, 
+      status, 
+      role 
+    } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    let query = supabaseAdmin
+      .from('employees')
+      .select(`
+        id, full_name, email, nik, division, employment_type,
+        leave_balance, start_date, role, status, created_at,
+        phone, address, position, password_changed,
+        manager:manager_id(id, full_name, email)
+      `, { count: 'exact' });
+
+    // Apply filters
+    if (search) {
+      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,nik.ilike.%${search}%`);
+    }
+
+    if (department) {
+      query = query.eq('division', department);
+    }
+
+    if (manager) {
+      // Filter by manager name - need to join with manager table
+      query = query.not('manager_id', 'is', null);
+      // Note: This is a simplified approach. For exact manager name matching,
+      // we would need a more complex query or handle it differently
+    }
+
+    if (hireDateFrom) {
+      query = query.gte('start_date', hireDateFrom);
+    }
+
+    if (hireDateTo) {
+      query = query.lte('start_date', hireDateTo);
+    }
+
+    if (employmentType) {
+      query = query.eq('employment_type', employmentType);
+    }
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    if (role) {
+      query = query.eq('role', role);
+    }
+
+    // If user is Manager (not Admin), only show their subordinates
+    if (req.user!.role === 'Manager') {
+      query = query.eq('manager_id', req.user!.id);
+    }
+
+    const { data: employees, error, count } = await query
+      .order('start_date', { ascending: false })
+      .range(offset, offset + Number(limit) - 1);
+
+    if (error) {
+      console.error('Database query error:', error);
+      return res.status(500).json({ error: 'Failed to fetch employees' });
+    }
+
+    // If manager filter is specified, filter by manager name in the results
+    let filteredEmployees = employees;
+    if (manager && employees && typeof manager === 'string') {
+      filteredEmployees = employees.filter(emp => 
+        emp.manager && typeof emp.manager === 'object' && 
+        'full_name' in emp.manager &&
+        typeof emp.manager.full_name === 'string' &&
+        emp.manager.full_name.toLowerCase().includes(manager.toLowerCase())
+      );
+    }
+
+    res.json({
+      employees: filteredEmployees,
+      total: count || 0,
+      page: Number(page),
+      totalPages: Math.ceil((count || 0) / Number(limit))
+    });
+  } catch (error) {
+    console.error('Get employees error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get employee by ID
+export const getEmployeeById = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    let query = supabaseAdmin
+      .from('employees')
+      .select(`
+        id, full_name, email, nik, division, employment_type,
+        leave_balance, start_date, role, status, created_at, updated_at,
+        phone, address, position, salary, password_changed,
+        manager:manager_id(id, full_name, email)
+      `)
+      .eq('id', id);
+
+    // If user is Manager (not Admin), only allow viewing their subordinates
+    if (req.user!.role === 'Manager') {
+      query = query.eq('manager_id', req.user!.id);
+    }
+
+    const { data: employee, error } = await query.single();
+
+    if (error || !employee) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    res.json({ employee });
+  } catch (error) {
+    console.error('Get employee error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Update employee (Admin only)
+export const updateEmployee = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const {
+      full_name,
+      division,
+      employment_type,
+      leave_balance,
+      role,
+      manager_id,
+      status,
+      phone,
+      address,
+      position,
+
+    } = req.body;
+
+    // Validate manager exists if manager_id is provided
+    if (manager_id) {
+      const { data: manager } = await supabaseAdmin
+        .from('employees')
+        .select('id, role')
+        .eq('id', manager_id)
+        .eq('status', 'Active')
+        .single();
+
+      if (!manager) {
+        return res.status(400).json({ error: 'Invalid manager ID' });
+      }
+
+      if (manager.role !== 'Manager' && manager.role !== 'Admin') {
+        return res.status(400).json({ error: 'Assigned manager must have Manager or Admin role' });
+      }
+    }
+
+    const { data: updatedEmployee, error } = await supabaseAdmin
+      .from('employees')
+      .update({
+        full_name,
+        division,
+        employment_type,
+        leave_balance,
+        role,
+        manager_id: manager_id || null,
+        status,
+        phone: phone || '',
+        address: address || '',
+        position: position || division,
+
+      })
+      .eq('id', id)
+      .select(`
+        id, full_name, email, nik, division, employment_type,
+        leave_balance, start_date, role, status, updated_at,
+        phone, address, position, salary, password_changed,
+        manager:manager_id(id, full_name, email)
+      `)
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: 'Failed to update employee' });
+    }
+
+    res.json({
+      message: 'Employee updated successfully',
+      employee: updatedEmployee
+    });
+  } catch (error) {
+    console.error('Update employee error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Generate new password for employee (Admin only)
+export const generateNewPassword = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Generate new random password
+    const newPassword = generateRandomPassword();
+    const password_hash = await hashPassword(newPassword);
+
+    const { error } = await supabaseAdmin
+      .from('employees')
+      .update({ 
+        password_hash,
+        password_changed: false
+      })
+      .eq('id', id);
+
+    if (error) {
+      return res.status(500).json({ error: 'Failed to generate new password' });
+    }
+
+    res.json({
+      message: 'New password generated successfully',
+      temporary_password: newPassword
+    });
+  } catch (error) {
+    console.error('Generate password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get all managers for dropdown (Admin only)
+export const getAllManagers = async (req: AuthRequest, res: Response) => {
+  try {
+    const { data: managers, error } = await supabaseAdmin
+      .from('employees')
+      .select('id, full_name, email, division')
+      .in('role', ['Manager', 'Admin'])
+      .eq('status', 'Active')
+      .order('full_name');
+
+    if (error) {
+      return res.status(500).json({ error: 'Failed to fetch managers' });
+    }
+
+    res.json({ managers });
+  } catch (error) {
+    console.error('Get managers error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
