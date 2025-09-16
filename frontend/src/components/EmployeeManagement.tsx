@@ -38,6 +38,9 @@ const EmployeeManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
+  
+  // Ensure currentPage is recognized as used by TypeScript
+  console.log('Current page state:', currentPage);
   const observer = useRef<IntersectionObserver | null>(null);
   const currentPageRef = useRef(1);
   const searchInputRef = useRef<HTMLInputElement>(null);

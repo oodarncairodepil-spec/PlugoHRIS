@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Filter, User, MessageSquare } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+// import { useAuth } from '../contexts/AuthContext'; // Commented out - unused
 import { apiService } from '../services/api';
 import type { LeaveRequest } from '../types';
 
