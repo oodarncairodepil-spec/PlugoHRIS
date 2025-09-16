@@ -6,8 +6,8 @@ class ApiService {
   private api: AxiosInstance;
 
   constructor() {
-    console.log('🔧 ApiService: Initializing with baseURL: /api (using Vite proxy)');
-    this.writeDebugLog('ApiService initialized with baseURL: /api (using Vite proxy)');
+    console.log('🔧 ApiService: Initializing with baseURL: /api');
+    this.writeDebugLog('ApiService initialized with baseURL: /api');
     
     this.api = axios.create({
       baseURL: '/api',
