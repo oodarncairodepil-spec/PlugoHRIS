@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Users, Plus, Search, Edit, Trash2, Key, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Users, Plus, Search, Trash2, AlertCircle, CheckCircle, X } from 'lucide-react';
 // Removed unused import
 import { apiService } from '../services/api';
 import type { Employee } from '../types';

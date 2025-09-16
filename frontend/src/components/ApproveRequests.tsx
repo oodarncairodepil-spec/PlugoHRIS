@@ -5,7 +5,7 @@ import { apiService } from '../services/api';
 import type { LeaveRequest } from '../types';
 
 const ApproveRequests: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Commented out unused variable
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
