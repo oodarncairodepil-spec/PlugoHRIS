@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' ? 'https://plugo-hris.vercel.app' : 'http://localhost:5173',
   credentials: true
 }));
 app.use(morgan('combined'));

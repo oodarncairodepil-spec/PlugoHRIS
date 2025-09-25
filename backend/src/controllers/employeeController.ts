@@ -201,12 +201,17 @@ export const getAllEmployees = async (req: AuthRequest, res: Response) => {
       query = query.eq('manager_id', req.user!.id);
     }
 
+    // Log the query parameters for debugging
+    console.log('Query parameters:', { page, limit, offset, role, department, search, manager, hireDateFrom, hireDateTo, employmentType, status });
+    console.log('User role:', req.user?.role);
+    
     const { data: employees, error, count } = await query
       .order('start_date', { ascending: false })
       .range(offset, offset + Number(limit) - 1);
 
     if (error) {
       console.error('Database query error:', error);
+      console.error('Query details:', { page, limit, offset, role, filters: { department, manager, hireDateFrom, hireDateTo, employmentType, status } });
       return res.status(500).json({ error: 'Failed to fetch employees' });
     }
 
