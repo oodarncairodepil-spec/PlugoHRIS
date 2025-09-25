@@ -22,7 +22,7 @@ const Dashboard: React.FC = () => {
     rejectedRequests: 0,
     totalEmployees: 0
   });
-  const [recentRequests, setRecentRequests] = useState<LeaveRequest[]>([]);
+  const [recentRequests, setRecentRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,49 +32,42 @@ const Dashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      if (hasRole('Admin')) {
-        // Admin can see all requests and employees
-        const [requestsData, employeesData] = await Promise.all([
-          apiService.getLeaveRequestsForApproval(),
-          apiService.getEmployees()
-        ]);
-        
-        setStats({
-          totalRequests: requestsData.leave_requests?.length || 0,
-          pendingRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Pending').length || 0,
-          approvedRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Approved').length || 0,
-          rejectedRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Rejected').length || 0,
-          totalEmployees: employeesData.employees?.length || 0
-        });
-        
-        setRecentRequests(requestsData.leave_requests?.slice(0, 5) || []);
-      } else if (hasRole('Manager')) {
-        // Manager can see subordinate requests
-        const requestsData = await apiService.getLeaveRequestsForApproval();
-        
-        setStats({
-          totalRequests: requestsData.leave_requests?.length || 0,
-          pendingRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Pending').length || 0,
-          approvedRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Approved').length || 0,
-          rejectedRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Rejected').length || 0,
-          totalEmployees: 0
-        });
-        
-        setRecentRequests(requestsData.leave_requests?.slice(0, 5) || []);
-      } else {
-        // Employee can see only their requests
-        const requestsData = await apiService.getMyLeaveRequests();
-        
-        setStats({
-          totalRequests: requestsData.leave_requests?.length || 0,
-          pendingRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Pending').length || 0,
-          approvedRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Approved').length || 0,
-          rejectedRequests: requestsData.leave_requests?.filter((r: LeaveRequest) => r.status === 'Rejected').length || 0,
-          totalEmployees: 0
-        });
-        
-        setRecentRequests(requestsData.leave_requests?.slice(0, 5) || []);
-      }
+      
+      // Admin can see ALL data from ALL employees with ALL statuses
+      const [leaveRequestsData, grabCodeRequestsData, employeesData] = await Promise.all([
+        apiService.getAllLeaveRequestsForDashboard(),
+        apiService.getAllGrabCodeRequestsForDashboard(),
+        apiService.getEmployees()
+      ]);
+      
+      const allLeaveRequests = leaveRequestsData.leave_requests || [];
+      const allGrabRequests = grabCodeRequestsData.grab_code_requests || [];
+      const totalRequests = allLeaveRequests.length + allGrabRequests.length;
+      
+      // Calculate stats from ALL requests (leave + grab code)
+      const pendingLeave = allLeaveRequests.filter((r: LeaveRequest) => r.status === 'Pending').length;
+      const approvedLeave = allLeaveRequests.filter((r: LeaveRequest) => r.status === 'Approved').length;
+      const rejectedLeave = allLeaveRequests.filter((r: LeaveRequest) => r.status === 'Rejected').length;
+      
+      const pendingGrab = allGrabRequests.filter((r: any) => r.status === 'Pending').length;
+      const approvedGrab = allGrabRequests.filter((r: any) => r.status === 'Approved').length;
+      const rejectedGrab = allGrabRequests.filter((r: any) => r.status === 'Rejected').length;
+      
+      setStats({
+        totalRequests,
+        pendingRequests: pendingLeave + pendingGrab,
+        approvedRequests: approvedLeave + approvedGrab,
+        rejectedRequests: rejectedLeave + rejectedGrab,
+        totalEmployees: employeesData.employees?.length || 0
+      });
+      
+      // Show recent requests from both leave and grab code requests
+      const combinedRequests = [
+        ...allLeaveRequests.map((r: any) => ({ ...r, type: 'Leave' as const })),
+        ...allGrabRequests.map((r: any) => ({ ...r, type: 'Grab Code' as const }))
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      setRecentRequests(combinedRequests.slice(0, 10));
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -130,7 +123,7 @@ const Dashboard: React.FC = () => {
                   Welcome back, {user?.employee?.full_name || user?.email}
                 </dt>
                 <dd className="text-lg font-medium text-gray-900">
-                  {hasRole('Admin') ? 'Admin Dashboard' : hasRole('Manager') ? 'Manager Dashboard' : 'Employee Dashboard'}
+                  Admin Dashboard - All Employee Data
                 </dd>
               </dl>
             </div>
@@ -149,7 +142,7 @@ const Dashboard: React.FC = () => {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Requests
+                    Total Requests (Leave + Grab Code)
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
                     {stats.totalRequests}
@@ -200,57 +193,78 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {hasRole('Admin') ? (
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Users className="h-6 w-6 text-blue-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Total Employees
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {stats.totalEmployees}
-                    </dd>
-                  </dl>
-                </div>
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <XCircle className="h-6 w-6 text-red-400" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Rejected
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {stats.rejectedRequests}
+                  </dd>
+                </dl>
               </div>
             </div>
           </div>
-        ) : (
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <XCircle className="h-6 w-6 text-red-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Rejected
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {stats.rejectedRequests}
-                    </dd>
-                  </dl>
-                </div>
+        </div>
+      </div>
+
+      {/* Additional Stats Row for Admin */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Users className="h-6 w-6 text-blue-400" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Total Employees
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {stats.totalEmployees}
+                  </dd>
+                </dl>
               </div>
             </div>
           </div>
-        )}
+        </div>
+        
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <FileText className="h-6 w-6 text-purple-400" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    All Statuses Included
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    Pending, Approved, Rejected
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Recent Requests */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Recent Leave Requests
+            Recent Requests (All Employees)
           </h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            {hasRole(['Admin', 'Manager']) ? 'Latest requests from your team' : 'Your recent leave requests'}
+            Latest leave and grab code requests from all employees with all statuses
           </p>
         </div>
         <ul className="divide-y divide-gray-200">
@@ -269,19 +283,26 @@ const Dashboard: React.FC = () => {
                     {getStatusIcon(request.status)}
                     <div className="ml-4">
                       <div className="flex items-center">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                          {request.type}
+                        </span>
                         <p className="text-sm font-medium text-gray-900">
-                          {typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Unknown'}
+                          {request.type === 'Leave' 
+                            ? (typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Leave Request')
+                            : `${request.codes_requested || request.days_requested || 1} Grab Code${(request.codes_requested || request.days_requested || 1) > 1 ? 's' : ''}`
+                          }
                         </p>
-                        {hasRole(['Admin', 'Manager']) && (
-                          <p className="ml-2 text-sm text-gray-500">
-                            by {request.employee?.full_name}
-                          </p>
-                        )}
+                        <p className="ml-2 text-sm text-gray-500">
+                          by {request.employee?.full_name}
+                        </p>
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
                         <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4" />
                         <p>
-                          {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
+                          {request.type === 'Leave' 
+                            ? `${new Date(request.start_date).toLocaleDateString()} - ${new Date(request.end_date).toLocaleDateString()}`
+                            : `Requested: ${new Date(request.created_at).toLocaleDateString()}`
+                          }
                         </p>
                       </div>
                     </div>

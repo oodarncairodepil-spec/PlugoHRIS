@@ -39,11 +39,21 @@ app.get('/api/health', (req, res) => {
 import authRoutes from './routes/auth';
 import employeeRoutes from './routes/employees';
 import leaveRoutes from './routes/leaves';
+import departmentRoutes from './routes/departments';
+import leaveBalanceRoutes from './routes/leaveBalance';
+import grabCodeRoutes from './routes/grabCodeRoutes';
+import servicesRoutes from './routes/services';
+import requestsRoutes from './routes/requests';
 
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/leave-balance', leaveBalanceRoutes);
+app.use('/api/grab-code-requests', grabCodeRoutes);
+app.use('/api/services', servicesRoutes);
+app.use('/api/requests', requestsRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -57,6 +67,6 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📱 Leave Request API ready at http://localhost:${PORT}`);
+  console.log(`✅ Backend server with Grab Code API restarted successfully`);
+  console.log(`🚀 Leave Request API server is running on port ${PORT}`);
 });

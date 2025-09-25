@@ -10,7 +10,13 @@ import {
   Users, 
   LogOut,
   User,
-  Plus
+  Plus,
+  Building2,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  Calculator,
+  Cog
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -21,13 +27,14 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout, hasRole } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
 
   const getNavigationItems = () => {
     const baseItems = [
       { name: 'Dashboard', href: '/', icon: Home, current: location.pathname === '/' },
-      { name: 'Submit Request', href: '/leave-request', icon: Plus, current: location.pathname === '/leave-request' },
       { name: 'My Requests', href: '/my-requests', icon: Calendar, current: location.pathname === '/my-requests' },
+      { name: 'Submit Request', href: '/leave-request', icon: Plus, current: location.pathname === '/leave-request' },
     ];
 
     if (hasRole(['Manager', 'Admin'])) {
@@ -39,16 +46,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       });
     }
 
-    if (hasRole('Admin')) {
-      baseItems.push({ 
-        name: 'Employees', 
-        href: '/employees', 
-        icon: Users, 
-        current: location.pathname === '/employees' 
-      });
-    }
-
     return baseItems;
+  };
+
+  const getSettingsItems = () => {
+    if (!hasRole('Admin')) return [];
+    
+    return [
+      { name: 'Employees', href: '/employees', icon: Users, current: location.pathname === '/employees' },
+      { name: 'Departments', href: '/departments', icon: Building2, current: location.pathname === '/departments' },
+      { name: 'Services', href: '/services', icon: Cog, current: location.pathname === '/services' },
+      { name: 'Balance Checker', href: '/leave-balance-checker', icon: Calculator, current: location.pathname === '/leave-balance-checker' }
+    ];
+  };
+
+  const isSettingsActive = () => {
+    const settingsItems = getSettingsItems();
+    return settingsItems.some(item => item.current);
   };
 
   const navigation = getNavigationItems();
@@ -97,6 +111,50 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </Link>
               );
             })}
+            
+            {hasRole('Admin') && (
+              <div>
+                <button
+                  onClick={() => setSettingsOpen(!settingsOpen)}
+                  className={`group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${
+                    isSettingsActive()
+                      ? 'bg-primary-100 text-primary-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Settings className="mr-3 h-5 w-5" />
+                  Settings
+                  {settingsOpen ? (
+                    <ChevronDown className="ml-auto h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="ml-auto h-4 w-4" />
+                  )}
+                </button>
+                
+                {settingsOpen && (
+                  <div className="ml-6 space-y-1">
+                    {getSettingsItems().map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.name}
+                          to={item.href}
+                          className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                            item.current
+                              ? 'bg-primary-100 text-primary-900'
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                          onClick={() => setSidebarOpen(false)}
+                        >
+                          <Icon className="mr-3 h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center">
@@ -146,6 +204,49 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </Link>
               );
             })}
+            
+            {hasRole('Admin') && (
+              <div>
+                <button
+                  onClick={() => setSettingsOpen(!settingsOpen)}
+                  className={`group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${
+                    isSettingsActive()
+                      ? 'bg-primary-100 text-primary-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Settings className="mr-3 h-5 w-5" />
+                  Settings
+                  {settingsOpen ? (
+                    <ChevronDown className="ml-auto h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="ml-auto h-4 w-4" />
+                  )}
+                </button>
+                
+                {settingsOpen && (
+                  <div className="ml-6 space-y-1">
+                    {getSettingsItems().map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.name}
+                          to={item.href}
+                          className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                            item.current
+                              ? 'bg-primary-100 text-primary-900'
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                        >
+                          <Icon className="mr-3 h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center">

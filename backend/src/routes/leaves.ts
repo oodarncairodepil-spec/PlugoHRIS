@@ -3,12 +3,13 @@ import {
   createLeaveRequest,
   getMyLeaveRequests,
   getLeaveRequestsForApproval,
+  getAllLeaveRequestsForDashboard,
   approveLeaveRequest,
   rejectLeaveRequest,
   getLeaveTypes,
   validateLeaveRequest
 } from '../controllers/leaveController';
-import { requireAuth, requireManagerOrHR } from '../middleware/auth';
+import { requireAuth, requireManagerOrHR, requireHR } from '../middleware/auth';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.get('/types', getLeaveTypes);
 
 // Manager and Admin routes
 router.get('/for-approval', requireManagerOrHR, getLeaveRequestsForApproval);
+router.get('/dashboard/all', requireHR, getAllLeaveRequestsForDashboard);
 router.put('/:id/approve', requireManagerOrHR, approveLeaveRequest);
 router.put('/:id/reject', requireManagerOrHR, rejectLeaveRequest);
 

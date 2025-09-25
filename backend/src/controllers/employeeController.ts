@@ -156,7 +156,7 @@ export const getAllEmployees = async (req: AuthRequest, res: Response) => {
       .select(`
         id, full_name, email, nik, division, employment_type,
         leave_balance, start_date, role, status, created_at,
-        phone, address, position, password_changed,
+        phone, address, position, password_changed, manager_id,
         manager:manager_id(id, full_name, email)
       `, { count: 'exact' });
 
@@ -226,6 +226,8 @@ export const getAllEmployees = async (req: AuthRequest, res: Response) => {
       
       return res.status(500).json({ error: 'Failed to fetch employees' });
     }
+
+
 
     // If manager filter is specified, filter by manager name in the results
     let filteredEmployees = employees;

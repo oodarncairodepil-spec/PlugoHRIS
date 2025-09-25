@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosResponse } from 'axios';
-import type { LoginRequest, LoginResponse, User, Employee, LeaveRequest, LeaveType, ApiResponse } from '../types';
+import type { LoginRequest, LoginResponse, User, Employee, LeaveRequest, LeaveType, ApiResponse, GrabCodeRequest, CreateGrabCodeRequestData, Service, CreateServiceData, UpdateServiceData } from '../types';
 
 class ApiService {
   private api: AxiosInstance;
@@ -202,22 +202,176 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
     return response.data.leave_types;
   }
 
+  // Grab Code Request methods
+  async createGrabCodeRequest(request: CreateGrabCodeRequestData): Promise<GrabCodeRequest> {
+    const response = await this.api.post('/grab-code-requests', request);
+    return response.data;
+  }
+
+  async getMyGrabCodeRequests(page = 1, limit = 10): Promise<{ grab_code_requests: GrabCodeRequest[]; pagination: { total: number; page: number; pages: number; limit: number } }> {
+    const response = await this.api.get(`/grab-code-requests/my-requests?page=${page}&limit=${limit}`);
+    return response.data;
+  }
+
+  async getAllGrabCodeRequests(page = 1, limit = 10, status?: string): Promise<{ grab_code_requests: GrabCodeRequest[]; pagination: { total: number; page: number; pages: number; limit: number } }> {
+    const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+    if (status) {
+      params.append('status', status);
+    }
+    const response = await this.api.get(`/grab-code-requests?${params.toString()}`);
+    return response.data;
+  }
+
+  async updateGrabCodeRequestStatus(id: string, status: 'Approved' | 'Rejected', rejectionReason?: string): Promise<GrabCodeRequest> {
+    const response = await this.api.put(`/grab-code-requests/${id}/status`, { status, rejection_reason: rejectionReason });
+    return response.data;
+  }
+
+  async approveGrabCodeRequest(id: string, approvedCodes: string[]): Promise<GrabCodeRequest> {
+    const requestData = { 
+      status: 'Approved', 
+      approved_codes: approvedCodes 
+    };
+    console.log('API: Sending grab code approval request:', {
+      id,
+      requestData
+    });
+    const response = await this.api.put(`/grab-code-requests/${id}/status`, requestData);
+    return response.data;
+  }
+
+  async rejectGrabCodeRequest(id: string, rejectionReason: string): Promise<GrabCodeRequest> {
+    const response = await this.api.put(`/grab-code-requests/${id}/status`, { 
+      status: 'Rejected', 
+      rejection_reason: rejectionReason 
+    });
+    return response.data;
+  }
+
+  async getGrabCodeRequestById(id: string): Promise<GrabCodeRequest> {
+    const response = await this.api.get(`/grab-code-requests/${id}`);
+    return response.data;
+  }
+
+  // Unified requests endpoint
+  async getMyAllRequests(page = 1, limit = 10, status?: string, type?: 'leave' | 'grab'): Promise<{
+    requests: any[];
+    pagination: { total: number; page: number; pages: number; limit: number };
+    summary: { total_leave_requests: number; total_grab_requests: number; total_requests: number };
+  }> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (status) params.append('status', status);
+    if (type) params.append('type', type);
+    
+    const response = await this.api.get(`/requests/my-requests?${params}`);
+    return response.data;
+  }
+
+  // Dashboard API endpoints (Admin only)
+  async getAllLeaveRequestsForDashboard(page = 1, limit = 100): Promise<{ leave_requests: LeaveRequest[]; pagination: { total: number; page: number; pages: number; limit: number } }> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    });
+    const response = await this.api.get(`/leaves/dashboard/all?${params}`);
+    return response.data;
+  }
+
+  async getAllGrabCodeRequestsForDashboard(page = 1, limit = 100): Promise<{ grab_code_requests: GrabCodeRequest[]; pagination: { total: number; page: number; pages: number; limit: number } }> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    });
+    const response = await this.api.get(`/grab-code-requests/dashboard/all?${params}`);
+    return response.data;
+  }
+
+  // Generic HTTP methods for additional endpoints
+  async get(url: string): Promise<any> {
+    const response = await this.api.get(url);
+    return response;
+  }
+
+  async post(url: string, data?: any): Promise<any> {
+    const response = await this.api.post(url, data);
+    return response;
+  }
+
+  async put(url: string, data?: any): Promise<any> {
+    const response = await this.api.put(url, data);
+    return response;
+  }
+
+  async delete(url: string): Promise<any> {
+    const response = await this.api.delete(url);
+    return response;
+  }
+
+  // Department-specific methods
+  async getDepartments(): Promise<{ departments: { id: string; name: string; details?: string; employee_count?: number }[] }> {
+    const response = await this.api.get('/departments?limit=1000');
+    return response.data;
+  }
+
+  async getDepartmentEmployees(departmentId: string): Promise<{ employees: Employee[] }> {
+    const response: AxiosResponse<{ employees: Employee[] }> = await this.api.get(`/departments/${departmentId}/employees`);
+    return response.data;
+  }
+
+  // Services API methods
+  async getAllServices(): Promise<Service[]> {
+    const response = await this.api.get('/services');
+    return response.data;
+  }
+
+  async getActiveServices(): Promise<Service[]> {
+    const response = await this.api.get('/services/active');
+    return response.data;
+  }
+
+  async getServiceById(id: number): Promise<Service> {
+    const response = await this.api.get(`/services/${id}`);
+    return response.data;
+  }
+
+  async createService(service: CreateServiceData): Promise<Service> {
+    const response = await this.api.post('/services', service);
+    return response.data;
+  }
+
+  async updateService(id: number, service: UpdateServiceData): Promise<Service> {
+    const response = await this.api.put(`/services/${id}`, service);
+    return response.data;
+  }
+
+  async toggleServiceStatus(id: number): Promise<Service> {
+    const response = await this.api.patch(`/services/${id}/toggle`);
+    return response.data;
+  }
+
+  async deleteService(id: number): Promise<void> {
+    await this.api.delete(`/services/${id}`);
+  }
+
   private writeDebugLog(message: string) {
     try {
-      const timestamp = new Date().toISOString();
-      const logEntry = `[${timestamp}] ${message}`;
+      const logs = JSON.parse(localStorage.getItem('api_debug_logs') || '[]');
+      logs.push({
+        timestamp: new Date().toISOString(),
+        message
+      });
       
-      // Store debug logs in localStorage for inspection
-      const existingLogs = localStorage.getItem('api_debug_logs') || '';
-      const newLogs = existingLogs + logEntry + '\n';
+      // Keep only last 100 logs
+      if (logs.length > 100) {
+        logs.splice(0, logs.length - 100);
+      }
       
-      // Keep only last 50 log entries to prevent localStorage overflow
-      const logLines = newLogs.split('\n').slice(-50);
-      localStorage.setItem('api_debug_logs', logLines.join('\n'));
-      
-      console.log('🐛 DEBUG:', logEntry);
+      localStorage.setItem('api_debug_logs', JSON.stringify(logs));
     } catch (error) {
-      // Silently fail to avoid breaking the app
+      console.warn('Failed to write debug log:', error);
     }
   }
 }

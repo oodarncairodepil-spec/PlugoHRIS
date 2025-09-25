@@ -8,6 +8,9 @@ import LeaveRequest from './components/LeaveRequest';
 import MyRequests from './components/MyRequests';
 import ApproveRequests from './components/ApproveRequests';
 import EmployeeManagement from './components/EmployeeManagement';
+import DepartmentManagement from './components/DepartmentManagement';
+import LeaveBalanceChecker from './components/LeaveBalanceChecker';
+import Services from './components/Services';
 import AdminRoute from './components/AdminRoute';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,13 +42,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/" element={<AdminRoute><Dashboard /></AdminRoute>} />
                     <Route path="/dashboard" element={<Navigate to="/" />} />
                     <Route path="/leave-request" element={<LeaveRequest />} />
                     <Route path="/my-requests" element={<MyRequests />} />
                     <Route path="/submit-request" element={<div className="text-center py-8"><h2 className="text-xl font-semibold text-gray-900">Submit Request - Coming Soon</h2></div>} />
                     <Route path="/approve-requests" element={<ApproveRequests />} />
                     <Route path="/employees" element={<AdminRoute><EmployeeManagement /></AdminRoute>} />
+                    <Route path="/departments" element={<AdminRoute><DepartmentManagement /></AdminRoute>} />
+                    <Route path="/leave-balance-checker" element={<AdminRoute><LeaveBalanceChecker /></AdminRoute>} />
+                    <Route path="/services" element={<AdminRoute><Services /></AdminRoute>} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

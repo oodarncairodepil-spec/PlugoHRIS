@@ -17,7 +17,7 @@ interface EmployeeFormData {
   status: 'Active' | 'Inactive';
   manager_id?: string;
   employment_type: 'Permanent' | 'Contract';
-  role: 'Employee' | 'Manager' | 'Admin';
+  role: 'Employee' | 'Manager' | 'Admin' | 'HR';
 }
 
 interface Manager {
@@ -27,22 +27,25 @@ interface Manager {
   division: string;
 }
 
+interface Department {
+  id: string;
+  name: string;
+  details?: string;
+  employee_count?: number;
+}
+
 const EmployeeManagement: React.FC = () => {
   // Remove unused user declaration
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [limit, setLimit] = useState(10);
   
-  // Ensure currentPage is recognized as used by TypeScript
-  console.log('Current page state:', currentPage);
-  const observer = useRef<IntersectionObserver | null>(null);
-  const currentPageRef = useRef(1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -66,6 +69,7 @@ const EmployeeManagement: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [managers, setManagers] = useState<Manager[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [generatedPassword, setGeneratedPassword] = useState<string>('');
   
   // Filter states
@@ -89,19 +93,19 @@ const EmployeeManagement: React.FC = () => {
     }
   };
 
-  const fetchEmployees = useCallback(async (reset = false) => {
+  const fetchDepartments = async () => {
     try {
-      if (reset) {
-        setLoading(true);
-        console.log('🔄 Starting fresh employee fetch (reset=true)');
-      } else {
-        setLoadingMore(true);
-        console.log('🔄 Loading more employees (reset=false)', { currentPage: currentPageRef.current, hasMore });
-      }
+      const response = await apiService.getDepartments();
+      setDepartments(response.departments);
+    } catch (err: any) {
+      console.error('Error fetching departments:', err);
+    }
+  };
+
+  const fetchEmployees = useCallback(async (page = currentPage, customLimit?: number) => {
+    try {
+      setLoading(true);
       setError('');
-      
-      const pageToFetch = reset ? 1 : currentPageRef.current;
-      console.log('🔍 Fetching employees:', { pageToFetch, currentPage: currentPageRef.current, searchTerm, reset });
       
       const filterParams = {
         department: filters.department || undefined,
@@ -113,78 +117,49 @@ const EmployeeManagement: React.FC = () => {
         role: filters.role || undefined,
       };
       
-      console.log('🔧 Calling API with:', { pageToFetch, searchTerm, filterParams });
-      
       const response = await apiService.getEmployees(
-        pageToFetch,
-        10,
+        page,
+        customLimit || limit,
         searchTerm || undefined,
         filterParams
       );
       
-      console.log('✅ Fetched employees response:', { 
-        employeesCount: response.employees.length, 
-        total: response.total, 
-        page: response.page,
-        totalPages: response.totalPages,
-        currentPageRef: currentPageRef.current,
-        reset
-      });
+      // Debug: Log employee data to check manager information
+      console.log('🔍 Employee data received:', response.employees.map(emp => ({
+        name: emp.full_name,
+        manager: emp.manager,
+        manager_id: emp.manager_id
+      })));
       
-      if (reset) {
-        setEmployees(response.employees);
-        setCurrentPage(2);
-        currentPageRef.current = 2;
-        const hasMoreData = response.employees.length === 10 && response.employees.length < response.total;
-         console.log('📊 Reset hasMore calculation:', { 
-           employeesLength: response.employees.length, 
-           total: response.total, 
-           hasMoreData,
-           condition1: response.employees.length === 10,
-           condition2: response.employees.length < response.total
-         });
-        setHasMore(hasMoreData);
-      } else {
-        setEmployees(prev => {
-          const newEmployees = [...prev, ...response.employees];
-          const hasMoreData = response.employees.length === 10 && newEmployees.length < response.total;
-          console.log('📊 Pagination hasMore calculation:', { 
-            newEmployeesLength: response.employees.length, 
-            totalEmployees: newEmployees.length, 
-            total: response.total, 
-            hasMoreData 
-          });
-          setHasMore(hasMoreData);
-          return newEmployees;
-        });
-        setCurrentPage(prev => {
-          const newPage = prev + 1;
-          currentPageRef.current = newPage;
-          return newPage;
-        });
-      }
-      
+      setEmployees(response.employees);
       setTotal(response.total);
+      setTotalPages(response.totalPages);
+      setCurrentPage(page);
       
-      console.log('Updated employees state with:', response.employees.length, 'new employees');
     } catch (err: any) {
       console.error('Error fetching employees:', err);
       setError(err.message || 'Failed to load employees');
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
-  }, [searchTerm, filters]);
+  }, [searchTerm, filters, limit]);
 
   useEffect(() => {
     // Load initial data on component mount
     setEmployees([]);
     setCurrentPage(1);
-    currentPageRef.current = 1;
-    setHasMore(true);
-    fetchEmployees(true);
+    fetchEmployees(1);
     fetchManagers();
+    fetchDepartments();
   }, []);
+
+  // Fetch employees when filters or search term changes
+  useEffect(() => {
+    if (searchTerm !== '' || filters.role || filters.department || filters.status) {
+      setCurrentPage(1);
+      fetchEmployees(1);
+    }
+  }, [searchTerm, filters.role, filters.department, filters.status, fetchEmployees]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -309,11 +284,11 @@ const EmployeeManagement: React.FC = () => {
         const response = await apiService.createEmployee(backendData as any);
         setGeneratedPassword(response.temporary_password);
         setSuccess('Employee created successfully! Temporary password generated.');
-        await fetchEmployees(true);
+        await fetchEmployees(1);
         // Don't close modal immediately for new employees so admin can copy password
         return;
       }
-      await fetchEmployees(true);
+      await fetchEmployees(1);
       closeModal();
     } catch (err: any) {
       console.error('Error saving employee:', err);
@@ -327,7 +302,7 @@ const EmployeeManagement: React.FC = () => {
       const response = await apiService.generateNewPassword(employeeId);
       setGeneratedPassword(response.temporary_password);
       setSuccess('New password generated successfully!');
-      await fetchEmployees(true);
+      await fetchEmployees(1);
     } catch (err: any) {
       console.error('Error generating password:', err);
       setError(err.message || 'Failed to generate password');
@@ -358,7 +333,7 @@ const EmployeeManagement: React.FC = () => {
       setProcessingId(employeeToDelete.id);
       await apiService.deleteEmployee(employeeToDelete.id);
       setSuccess('Employee deleted successfully!');
-      await fetchEmployees(true);
+      await fetchEmployees(1);
       setShowDeleteConfirm(false);
       setEmployeeToDelete(null);
       closeModal();
@@ -377,9 +352,7 @@ const EmployeeManagement: React.FC = () => {
   const handleSearch = (): void => {
     setEmployees([]);
     setCurrentPage(1);
-    currentPageRef.current = 1;
-    setHasMore(true);
-    fetchEmployees(true);
+    fetchEmployees(1);
   };
 
   const handleClearSearch = (): void => {
@@ -395,24 +368,17 @@ const EmployeeManagement: React.FC = () => {
     });
     setEmployees([]);
     setCurrentPage(1);
-    currentPageRef.current = 1;
-    setHasMore(true);
-    fetchEmployees(true);
+    fetchEmployees(1);
   };
 
   const handleFilterChange = (field: string, value: string): void => {
-    console.log('🔧 Filter changed:', { field, value });
     setFilters(prev => {
       const newFilters = { ...prev, [field]: value };
-      console.log('🔧 New filters state:', newFilters);
       // Trigger search when filters change
       setTimeout(() => {
-        console.log('🔧 Triggering search with filters:', newFilters);
         setEmployees([]);
         setCurrentPage(1);
-        currentPageRef.current = 1;
-        setHasMore(true);
-        fetchEmployees(true);
+        fetchEmployees(1);
       }, 0);
       return newFilters;
     });
@@ -422,25 +388,7 @@ const EmployeeManagement: React.FC = () => {
     setShowFilters(!showFilters);
   };
 
-  const fetchEmployeesRef = useRef<(reset?: boolean) => Promise<void>>(fetchEmployees);
-  fetchEmployeesRef.current = fetchEmployees;
 
-  const lastEmployeeElementRef = useCallback((node: HTMLDivElement) => {
-    if (loading || loadingMore) {
-      console.log('🚫 Intersection observer blocked:', { loading, loadingMore });
-      return;
-    }
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        console.log('🔄 Intersection triggered, loading more employees...', { hasMore });
-        fetchEmployeesRef.current(false);
-      } else {
-        console.log('🔍 Intersection check:', { isIntersecting: entries[0].isIntersecting, hasMore });
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [loading, loadingMore, hasMore]);
 
 
 
@@ -531,12 +479,11 @@ const EmployeeManagement: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">All Departments</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Sales">Sales</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Operations">Operations</option>
+                    {departments.map((department) => (
+                      <option key={department.id} value={department.name}>
+                        {department.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 
@@ -663,42 +610,43 @@ const EmployeeManagement: React.FC = () => {
 
         {/* Employee List - Mobile Friendly Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {employees.map((employee, index) => {
-            const isLast = employees.length === index + 1;
-            return (
-              <div
-                key={employee.id}
-                ref={isLast ? lastEmployeeElementRef : null}
-                onClick={() => openModal(employee)}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 cursor-pointer transition-all duration-200 active:scale-95"
-              >
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold text-gray-900 truncate">
-                        {employee.full_name}
-                      </h3>
-                      <p className="text-sm text-gray-500 truncate">
-                        {employee.position || 'No Position'}
+          {employees.map((employee) => (
+            <div
+              key={employee.id}
+              onClick={() => openModal(employee)}
+              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 cursor-pointer transition-all duration-200 active:scale-95"
+            >
+              <div className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-semibold text-gray-900 truncate">
+                      {employee.full_name}
+                    </h3>
+                    <p className="text-sm text-gray-500 truncate">
+                      {employee.position || 'No Position'}
+                    </p>
+                    {employee.manager && (
+                      <p className="text-xs text-blue-600 truncate mt-1">
+                        Manager: {employee.manager.full_name}
                       </p>
-                    </div>
-                    <div className="flex flex-col items-end ml-2">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
-                        employee.status === 'Active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {employee.status}
-                      </span>
-                      <p className="text-xs text-gray-400 mt-1 text-right">
-                        {employee.division}
-                      </p>
-                    </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end ml-2">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
+                      employee.status === 'Active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {employee.status}
+                    </span>
+                    <p className="text-xs text-gray-400 mt-1 text-right">
+                      {employee.division}
+                    </p>
                   </div>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
 
         {employees.length === 0 && !loading && (
@@ -711,11 +659,81 @@ const EmployeeManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Loading indicator for infinite scroll */}
-        {loadingMore && (
-          <div className="flex justify-center items-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-sm text-gray-600">Loading more employees...</span>
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700">Show:</span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  const newLimit = Number(e.target.value);
+                  setLimit(newLimit);
+                  setCurrentPage(1);
+                  // Call fetchEmployees with the new limit directly
+                  fetchEmployees(1, newLimit);
+                }}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={10}>10</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm text-gray-700">per page</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700">
+                Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, total)} of {total} employees
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => fetchEmployees(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <div className="flex gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => fetchEmployees(pageNum)}
+                      className={`px-3 py-1 text-sm border rounded-md ${
+                        currentPage === pageNum
+                          ? 'bg-blue-500 text-white border-blue-500'
+                          : 'border-gray-300 hover:bg-gray-100'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={() => fetchEmployees(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -789,14 +807,20 @@ const EmployeeManagement: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Department *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="department"
                       value={formData.department}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
-                    />
+                    >
+                      <option value="">Select Department</option>
+                      {departments.map((department) => (
+                        <option key={department.id} value={department.name}>
+                          {department.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* e. Manager */}

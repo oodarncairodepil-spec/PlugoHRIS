@@ -380,18 +380,66 @@ export const rejectLeaveRequest = async (req: AuthRequest, res: Response) => {
 };
 
 // Get leave types
+// Get all leave requests for admin dashboard (Admin only)
+export const getAllLeaveRequestsForDashboard = async (req: AuthRequest, res: Response) => {
+  try {
+    // Only allow Admin users
+    if (req.user!.role !== 'Admin') {
+      return res.status(403).json({ error: 'Access denied. Admin role required.' });
+    }
+
+    const { page = 1, limit = 100 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const query = supabaseAdmin
+      .from('leave_requests')
+      .select(`
+        id, start_date, end_date, days_requested, reason, status,
+        created_at, approved_at, rejection_reason,
+        leave_type:leave_type_id(id, name),
+        employee:employee_id(id, full_name, email, division),
+        approved_by_user:approved_by(id, full_name)
+      `, { count: 'exact' });
+
+    // No status filtering - get ALL requests
+    // No employee filtering - get requests from ALL employees
+
+    const { data: leaveRequests, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + Number(limit) - 1);
+
+    if (error) {
+      return res.status(500).json({ error: 'Failed to fetch leave requests' });
+    }
+
+    res.json({
+      leave_requests: leaveRequests,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: count || 0,
+        pages: Math.ceil((count || 0) / Number(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Get all leave requests for dashboard error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const getLeaveTypes = async (req: AuthRequest, res: Response) => {
   try {
-    const { data: leaveTypes, error } = await supabase
+    const { data: leaveTypes, error } = await supabaseAdmin
       .from('leave_types')
-      .select('id, name, description, max_days_per_year, requires_approval')
+      .select('*')
+      .eq('is_active', true)
       .order('name');
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch leave types' });
     }
 
-    res.json({ leave_types: leaveTypes });
+    res.json(leaveTypes);
   } catch (error) {
     console.error('Get leave types error:', error);
     res.status(500).json({ error: 'Internal server error' });

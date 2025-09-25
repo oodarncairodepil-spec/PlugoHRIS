@@ -1,35 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Filter } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, FileText, Car, Filter, Copy } from 'lucide-react';
 import { apiService } from '../services/api';
-import type { LeaveRequest } from '../types';
 
 const MyRequests: React.FC = () => {
-  // Remove unused user declaration
-  const [requests, setRequests] = useState<LeaveRequest[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<'leave' | 'grab' | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({ total_leave_requests: 0, total_grab_requests: 0, total_requests: 0 });
 
   useEffect(() => {
     fetchRequests();
-  }, [currentPage, statusFilter]);
+  }, [currentPage, statusFilter, typeFilter]);
 
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getMyLeaveRequests(
+      const response = await apiService.getMyAllRequests(
         currentPage,
         10,
-        statusFilter || undefined
+        statusFilter || undefined,
+        typeFilter || undefined
       );
-      setRequests(response.leave_requests);
+      setRequests(response.requests);
       setTotalPages(response.pagination.pages);
       setTotal(response.pagination.total);
+      setSummary(response.summary);
     } catch (err: any) {
-      setError(err.message || 'Failed to load leave requests');
+      setError(err.message || 'Failed to load requests');
     } finally {
       setLoading(false);
     }
@@ -77,6 +79,21 @@ const MyRequests: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleTypeFilterChange = (type: 'leave' | 'grab' | '') => {
+    setTypeFilter(type);
+    setCurrentPage(1);
+  };
+
+  const getRequestIcon = (requestType: string) => {
+    return requestType === 'leave' ? 
+      <FileText className="h-5 w-5 text-blue-500" /> : 
+      <Car className="h-5 w-5 text-purple-500" />;
+  };
+
+  const getRequestTypeLabel = (requestType: string) => {
+    return requestType === 'leave' ? 'Leave Request' : 'Grab Code Request';
+  };
+
   if (loading && requests.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -93,11 +110,23 @@ const MyRequests: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center mb-4 sm:mb-0">
               <Calendar className="h-6 w-6 text-blue-600 mr-2" />
-              <h1 className="text-2xl font-bold text-gray-900">My Leave Requests</h1>
+              <h1 className="text-2xl font-bold text-gray-900">My Requests</h1>
             </div>
             
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <select
+                  value={typeFilter}
+                  onChange={(e) => handleTypeFilterChange(e.target.value as 'leave' | 'grab' | '')}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Types</option>
+                  <option value="leave">Leave Requests</option>
+                  <option value="grab">Grab Requests</option>
+                </select>
+              </div>
               <div className="relative">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <select
@@ -115,7 +144,21 @@ const MyRequests: React.FC = () => {
           </div>
           
           {/* Summary */}
-          <div className="mt-4 text-sm text-gray-600">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="text-blue-600 font-medium">Total Requests</div>
+              <div className="text-2xl font-bold text-blue-800">{summary.total_requests}</div>
+            </div>
+            <div className="bg-green-50 p-3 rounded-lg">
+              <div className="text-green-600 font-medium">Leave Requests</div>
+              <div className="text-2xl font-bold text-green-800">{summary.total_leave_requests}</div>
+            </div>
+            <div className="bg-purple-50 p-3 rounded-lg">
+              <div className="text-purple-600 font-medium">Grab Requests</div>
+              <div className="text-2xl font-bold text-purple-800">{summary.total_grab_requests}</div>
+            </div>
+          </div>
+          <div className="mt-2 text-sm text-gray-600">
             Showing {requests.length} of {total} requests
           </div>
         </div>
@@ -134,47 +177,77 @@ const MyRequests: React.FC = () => {
           {requests.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No leave requests found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No requests found</h3>
               <p className="text-gray-500">
-                {statusFilter ? `No ${statusFilter.toLowerCase()} requests found.` : 'You haven\'t submitted any leave requests yet.'}
+                {statusFilter || typeFilter ? 
+                  `No ${typeFilter ? typeFilter + ' ' : ''}${statusFilter ? statusFilter.toLowerCase() + ' ' : ''}requests found.` : 
+                  'You haven\'t submitted any requests yet.'}
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {requests.map((request) => (
-                <div key={request.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div key={`${request.request_type}-${request.id}`} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
+                        {getRequestIcon(request.request_type)}
                         {getStatusIcon(request.status)}
                         <h3 className="ml-2 text-lg font-medium text-gray-900">
-                          {typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Unknown Leave Type'}
+                          {request.request_type === 'leave' ? 
+                            (typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Leave Request') :
+                            `${request.service_needed} - ${getRequestTypeLabel(request.request_type)}`
+                          }
                         </h3>
                         <span className={`ml-3 ${getStatusBadge(request.status)}`}>
                           {request.status}
                         </span>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          <span>{formatDate(request.start_date)} - {formatDate(request.end_date)}</span>
+                      {request.request_type === 'leave' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            <span>{formatDate(request.start_date)} - {formatDate(request.end_date)}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-1" />
+                            <span>{request.total_days || request.days_requested} days</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium text-gray-700">Requester:</span>
+                            <br />
+                            <span className="text-gray-600">{request.employee?.full_name || 'Unknown'}</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium text-gray-700">Approval Manager:</span>
+                            <br />
+                            <span className="text-gray-600">{request.approved_by_user?.full_name || 'Not assigned'}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          <span>{request.total_days || request.days_requested} days</span>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            <span>{formatDate(request.usage_time)}</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium text-gray-700">Meeting Location:</span>
+                            <br />
+                            <span className="text-gray-600">{request.meeting_location}</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium text-gray-700">Requester:</span>
+                            <br />
+                            <span className="text-gray-600">{request.employee?.full_name || 'Unknown'}</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium text-gray-700">Code Needed:</span>
+                            <br />
+                            <span className="text-gray-600">{request.code_needed ? 'Yes' : 'No'}</span>
+                          </div>
                         </div>
-                        <div className="text-sm">
-                          <span className="font-medium text-gray-700">Requester:</span>
-                          <br />
-                          <span className="text-gray-600">{request.employee?.full_name || 'Unknown'}</span>
-                        </div>
-                        <div className="text-sm">
-                          <span className="font-medium text-gray-700">Approval Manager:</span>
-                          <br />
-                          <span className="text-gray-600">{request.approved_by_user?.full_name || 'Not assigned'}</span>
-                        </div>
-                      </div>
+                      )}
                       
                       <div className="mt-2 text-xs text-gray-500">
                         Submitted: {formatDate(request.created_at)}
@@ -183,6 +256,28 @@ const MyRequests: React.FC = () => {
                       {request.status === 'Approved' && request.approved_at && (
                         <div className="mt-2 text-sm text-green-600">
                           <span className="font-medium">Approved on:</span> {formatDate(request.approved_at)}
+                          {request.request_type === 'grab' && request.approved_codes && request.approved_codes.length > 0 && (
+                            <div className="mt-2">
+                              <span className="font-medium">Approved Codes:</span>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {request.approved_codes.map((code: string, index: number) => (
+                                  <div key={index} className="flex items-center bg-green-100 text-green-800 rounded px-2 py-1">
+                                    <span className="font-mono text-sm mr-2">{code}</span>
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(code);
+                                        // You could add a toast notification here
+                                      }}
+                                      className="text-green-600 hover:text-green-800 transition-colors"
+                                      title="Copy code"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                       

@@ -1,329 +1,672 @@
-index-JuOlyGq0.js:203 Current page state: 1
-index-JuOlyGq0.js:203 🔄 Starting fresh employee fetch (reset=true)
-index-JuOlyGq0.js:203 🔍 Fetching employees: {pageToFetch: 1, currentPage: 1, searchTerm: '', reset: true}
-index-JuOlyGq0.js:203 🔧 Calling API with: {pageToFetch: 1, searchTerm: '', filterParams: {…}}
-index-JuOlyGq0.js:65 🔍 Fetching employees: {url: '/employees?page=1&limit=10', page: 1, limit: 10, search: undefined, filters: {…}, …}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:34.732Z] Fetching employees: {
-  "url": "/employees?page=1&limit=10",
-  "page": 1,
-  "limit": 10,
-  "filters": {},
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=1&limit=10",
-  "timestamp": "2025-09-25T06:29:34.732Z"
-}
-index-JuOlyGq0.js:203 Current page state: 1
-index-JuOlyGq0.js:65 ✅ API Response: /employees?page=1&limit=10 200
-index-JuOlyGq0.js:65 📊 Employees response: {count: 10, total: 35, status: 200}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:36.015Z] Employees response: {
-  "count": 10,
-  "total": 35,
-  "status": 200
-}
-index-JuOlyGq0.js:203 ✅ Fetched employees response: {employeesCount: 10, total: 35, page: 1, totalPages: 4, currentPageRef: 1, …}
-index-JuOlyGq0.js:203 📊 Reset hasMore calculation: {employeesLength: 10, total: 35, hasMoreData: true, condition1: true, condition2: true}
-index-JuOlyGq0.js:203 Updated employees state with: 10 new employees
-index-JuOlyGq0.js:203 Current page state: 2
-index-JuOlyGq0.js:203 🔄 Intersection triggered, loading more employees... {hasMore: true}
-index-JuOlyGq0.js:203 🔄 Loading more employees (reset=false) {currentPage: 2, hasMore: true}
-index-JuOlyGq0.js:203 🔍 Fetching employees: {pageToFetch: 2, currentPage: 2, searchTerm: '', reset: false}
-index-JuOlyGq0.js:203 🔧 Calling API with: {pageToFetch: 2, searchTerm: '', filterParams: {…}}
-index-JuOlyGq0.js:65 🔍 Fetching employees: {url: '/employees?page=2&limit=10', page: 2, limit: 10, search: undefined, filters: {…}, …}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:36.037Z] Fetching employees: {
-  "url": "/employees?page=2&limit=10",
-  "page": 2,
-  "limit": 10,
-  "filters": {},
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=2&limit=10",
-  "timestamp": "2025-09-25T06:29:36.036Z"
-}
-index-JuOlyGq0.js:203 Current page state: 2
-index-JuOlyGq0.js:203 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-index-JuOlyGq0.js:65 ✅ API Response: /employees/managers/list 200
-index-JuOlyGq0.js:203 Current page state: 2
-index-JuOlyGq0.js:65 ✅ API Response: /employees?page=2&limit=10 200
-index-JuOlyGq0.js:65 📊 Employees response: {count: 10, total: 35, status: 200}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:37.326Z] Employees response: {
-  "count": 10,
-  "total": 35,
-  "status": 200
-}
-index-JuOlyGq0.js:203 ✅ Fetched employees response: {employeesCount: 10, total: 35, page: 2, totalPages: 4, currentPageRef: 2, …}
-index-JuOlyGq0.js:203 Updated employees state with: 10 new employees
-index-JuOlyGq0.js:203 📊 Pagination hasMore calculation: {newEmployeesLength: 10, totalEmployees: 20, total: 35, hasMoreData: true}
-index-JuOlyGq0.js:203 Current page state: 3
-index-JuOlyGq0.js:203 Current page state: 3
-index-JuOlyGq0.js:203 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-index-JuOlyGq0.js:203 🔄 Intersection triggered, loading more employees... {hasMore: true}
-index-JuOlyGq0.js:203 🔄 Loading more employees (reset=false) {currentPage: 3, hasMore: true}
-index-JuOlyGq0.js:203 🔍 Fetching employees: {pageToFetch: 3, currentPage: 3, searchTerm: '', reset: false}
-index-JuOlyGq0.js:203 🔧 Calling API with: {pageToFetch: 3, searchTerm: '', filterParams: {…}}
-index-JuOlyGq0.js:65 🔍 Fetching employees: {url: '/employees?page=3&limit=10', page: 3, limit: 10, search: undefined, filters: {…}, …}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:37.349Z] Fetching employees: {
-  "url": "/employees?page=3&limit=10",
-  "page": 3,
-  "limit": 10,
-  "filters": {},
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=3&limit=10",
-  "timestamp": "2025-09-25T06:29:37.349Z"
-}
-index-JuOlyGq0.js:203 Current page state: 3
-index-JuOlyGq0.js:203 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-index-JuOlyGq0.js:65 ✅ API Response: /employees?page=3&limit=10 200
-index-JuOlyGq0.js:65 📊 Employees response: {count: 10, total: 35, status: 200}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:38.178Z] Employees response: {
-  "count": 10,
-  "total": 35,
-  "status": 200
-}
-index-JuOlyGq0.js:203 ✅ Fetched employees response: {employeesCount: 10, total: 35, page: 3, totalPages: 4, currentPageRef: 3, …}
-index-JuOlyGq0.js:203 Updated employees state with: 10 new employees
-index-JuOlyGq0.js:203 📊 Pagination hasMore calculation: {newEmployeesLength: 10, totalEmployees: 30, total: 35, hasMoreData: true}
-index-JuOlyGq0.js:203 Current page state: 4
-index-JuOlyGq0.js:203 Current page state: 4
-index-JuOlyGq0.js:203 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-index-JuOlyGq0.js:203 🔍 Intersection check: {isIntersecting: false, hasMore: true}
-index-JuOlyGq0.js:203 🔄 Intersection triggered, loading more employees... {hasMore: true}
-index-JuOlyGq0.js:203 🔄 Loading more employees (reset=false) {currentPage: 4, hasMore: true}
-index-JuOlyGq0.js:203 🔍 Fetching employees: {pageToFetch: 4, currentPage: 4, searchTerm: '', reset: false}
-index-JuOlyGq0.js:203 🔧 Calling API with: {pageToFetch: 4, searchTerm: '', filterParams: {…}}
-index-JuOlyGq0.js:65 🔍 Fetching employees: {url: '/employees?page=4&limit=10', page: 4, limit: 10, search: undefined, filters: {…}, …}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:42.696Z] Fetching employees: {
-  "url": "/employees?page=4&limit=10",
-  "page": 4,
-  "limit": 10,
-  "filters": {},
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=4&limit=10",
-  "timestamp": "2025-09-25T06:29:42.696Z"
-}
-index-JuOlyGq0.js:203 Current page state: 4
-index-JuOlyGq0.js:203 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-index-JuOlyGq0.js:65 ✅ API Response: /employees?page=4&limit=10 200
-index-JuOlyGq0.js:65 📊 Employees response: {count: 5, total: 35, status: 200}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:44.584Z] Employees response: {
-  "count": 5,
-  "total": 35,
-  "status": 200
-}
-index-JuOlyGq0.js:203 ✅ Fetched employees response: {employeesCount: 5, total: 35, page: 4, totalPages: 4, currentPageRef: 4, …}
-index-JuOlyGq0.js:203 Updated employees state with: 5 new employees
-index-JuOlyGq0.js:203 📊 Pagination hasMore calculation: {newEmployeesLength: 5, totalEmployees: 35, total: 35, hasMoreData: false}
-index-JuOlyGq0.js:203 Current page state: 5
-index-JuOlyGq0.js:203 Current page state: 5
-index-JuOlyGq0.js:203 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-index-JuOlyGq0.js:203 🔍 Intersection check: {isIntersecting: true, hasMore: false}
-index-JuOlyGq0.js:203 🔍 Intersection check: {isIntersecting: false, hasMore: false}
-index-JuOlyGq0.js:203 Current page state: 5
-index-JuOlyGq0.js:203 🔧 Filter changed: {field: 'role', value: 'Admin'}
-index-JuOlyGq0.js:203 Current page state: 5
-index-JuOlyGq0.js:203 🔧 New filters state: {department: '', manager: '', hireDateFrom: '', hireDateTo: '', employmentType: '', …}
-index-JuOlyGq0.js:203 🔧 Triggering search with filters: {department: '', manager: '', hireDateFrom: '', hireDateTo: '', employmentType: '', …}
-index-JuOlyGq0.js:203 🔄 Starting fresh employee fetch (reset=true)
-index-JuOlyGq0.js:203 🔍 Fetching employees: {pageToFetch: 1, currentPage: 1, searchTerm: '', reset: true}
-index-JuOlyGq0.js:203 🔧 Calling API with: {pageToFetch: 1, searchTerm: '', filterParams: {…}}
-index-JuOlyGq0.js:65 🔍 Fetching employees: {url: '/employees?page=1&limit=10', page: 1, limit: 10, search: undefined, filters: {…}, …}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:56.977Z] Fetching employees: {
-  "url": "/employees?page=1&limit=10",
-  "page": 1,
-  "limit": 10,
-  "filters": {},
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=1&limit=10",
-  "timestamp": "2025-09-25T06:29:56.977Z"
-}
-index-JuOlyGq0.js:203 Current page state: 1
-index-JuOlyGq0.js:65 ✅ API Response: /employees?page=1&limit=10 200
-index-JuOlyGq0.js:65 📊 Employees response: {count: 10, total: 35, status: 200}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:58.478Z] Employees response: {
-  "count": 10,
-  "total": 35,
-  "status": 200
-}
-index-JuOlyGq0.js:203 ✅ Fetched employees response: {employeesCount: 10, total: 35, page: 1, totalPages: 4, currentPageRef: 1, …}
-index-JuOlyGq0.js:203 📊 Reset hasMore calculation: {employeesLength: 10, total: 35, hasMoreData: true, condition1: true, condition2: true}
-index-JuOlyGq0.js:203 Updated employees state with: 10 new employees
-index-JuOlyGq0.js:203 Current page state: 2
-index-JuOlyGq0.js:203 🔍 Intersection check: {isIntersecting: false, hasMore: true}
-index-JuOlyGq0.js:203 🔄 Intersection triggered, loading more employees... {hasMore: true}
-index-JuOlyGq0.js:203 🔄 Loading more employees (reset=false) {currentPage: 2, hasMore: false}
-index-JuOlyGq0.js:203 🔍 Fetching employees: {pageToFetch: 2, currentPage: 2, searchTerm: '', reset: false}
-index-JuOlyGq0.js:203 🔧 Calling API with: {pageToFetch: 2, searchTerm: '', filterParams: {…}}
-index-JuOlyGq0.js:65 🔍 Fetching employees: {url: '/employees?page=2&limit=10&role=Admin', page: 2, limit: 10, search: undefined, filters: {…}, …}
-index-JuOlyGq0.js:68 🐛 DEBUG: [2025-09-25T06:29:59.946Z] Fetching employees: {
-  "url": "/employees?page=2&limit=10&role=Admin",
-  "page": 2,
-  "limit": 10,
-  "filters": {
-    "role": "Admin"
-  },
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=2&limit=10&role=Admin",
-  "timestamp": "2025-09-25T06:29:59.946Z"
-}
-index-JuOlyGq0.js:203 Current page state: 2
-index-JuOlyGq0.js:203 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-  GET https://plugo-hris.vercel.app/api/employees?page=2&limit=10&role=Admin 500 (Internal Server Error)
-(anonymous) @ index-JuOlyGq0.js:62
-xhr @ index-JuOlyGq0.js:62
-rh @ index-JuOlyGq0.js:64
+api.ts:118 🔍 Fetching employees: {url: '/employees?page=1&limit=10', page: 1, limit: 10, search: undefined, filters: undefined, …}
+api.ts:374 Failed to write debug log: SyntaxError: Unexpected non-whitespace character after JSON at position 7 (line 1 column 8)
+    at JSON.parse (<anonymous>)
+    at ApiService.writeDebugLog (api.ts:361:25)
+    at ApiService.getEmployees (api.ts:119:10)
+    at fetchDashboardData (Dashboard.tsx:40:20)
+    at Dashboard.tsx:29:5
+    at Object.react_stack_bottom_frame (react-dom_client.js?v=99b934bb:17486:20)
+    at runWithFiberInDEV (react-dom_client.js?v=99b934bb:1485:72)
+    at commitHookEffectListMount (react-dom_client.js?v=99b934bb:8460:122)
+    at commitHookPassiveMountEffects (react-dom_client.js?v=99b934bb:8518:60)
+    at commitPassiveMountOnFiber (react-dom_client.js?v=99b934bb:9887:29)
+overrideMethod @ hook.js:608
+writeDebugLog @ api.ts:374
+getEmployees @ api.ts:119
+fetchDashboardData @ Dashboard.tsx:40
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9887
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9899
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11302
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:118 🔍 Fetching employees: {url: '/employees?page=1&limit=10', page: 1, limit: 10, search: undefined, filters: undefined, …}
+api.ts:374 Failed to write debug log: SyntaxError: Unexpected non-whitespace character after JSON at position 7 (line 1 column 8)
+    at JSON.parse (<anonymous>)
+    at ApiService.writeDebugLog (api.ts:361:25)
+    at ApiService.getEmployees (api.ts:119:10)
+    at fetchDashboardData (Dashboard.tsx:40:20)
+    at Dashboard.tsx:29:5
+    at Object.react_stack_bottom_frame (react-dom_client.js?v=99b934bb:17486:20)
+    at runWithFiberInDEV (react-dom_client.js?v=99b934bb:1485:72)
+    at commitHookEffectListMount (react-dom_client.js?v=99b934bb:8460:122)
+    at commitHookPassiveMountEffects (react-dom_client.js?v=99b934bb:8518:60)
+    at reconnectPassiveEffects (react-dom_client.js?v=99b934bb:10016:13)
+overrideMethod @ hook.js:600
+writeDebugLog @ api.ts:374
+getEmployees @ api.ts:119
+fetchDashboardData @ Dashboard.tsx:40
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10016
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=99b934bb:9995
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10009
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=99b934bb:11461
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11432
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11469
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11309
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:288  GET http://localhost:5173/api/grab-codes/dashboard/all?page=1&limit=100 404 (Not Found)
+dispatchXhrRequest @ axios.js?v=99b934bb:1672
+xhr @ axios.js?v=99b934bb:1552
+dispatchRequest @ axios.js?v=99b934bb:2027
 Promise.then
-_request @ index-JuOlyGq0.js:65
-request @ index-JuOlyGq0.js:64
-ca.<computed> @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:60
-getEmployees @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:203
-(anonymous) @ index-JuOlyGq0.js:203
- ❌ API Error: {url: '/employees?page=2&limit=10&role=Admin', method: 'get', status: 500, message: 'Request failed with status code 500', code: 'ERR_BAD_RESPONSE', …}
-overrideMethod @ installHook.js:1
-(anonymous) @ index-JuOlyGq0.js:65
+_request @ axios.js?v=99b934bb:2230
+request @ axios.js?v=99b934bb:2139
+Axios.<computed> @ axios.js?v=99b934bb:2267
+wrap @ axios.js?v=99b934bb:8
+getAllGrabCodeRequestsForDashboard @ api.ts:288
+fetchDashboardData @ Dashboard.tsx:39
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9887
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9899
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11302
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:52 ❌ API Error: {url: '/grab-codes/dashboard/all?page=1&limit=100', method: 'get', status: 404, message: 'Request failed with status code 404', code: 'ERR_BAD_REQUEST', …}
+overrideMethod @ hook.js:608
+(anonymous) @ api.ts:52
 Promise.then
-_request @ index-JuOlyGq0.js:65
-request @ index-JuOlyGq0.js:64
-ca.<computed> @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:60
-getEmployees @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:203
-(anonymous) @ index-JuOlyGq0.js:203
- 🐛 DEBUG: [2025-09-25T06:30:01.870Z] API Error: {
-  "url": "/employees?page=2&limit=10&role=Admin",
-  "method": "get",
-  "status": 500,
-  "message": "Request failed with status code 500",
-  "code": "ERR_BAD_RESPONSE",
-  "baseURL": "/api",
-  "timestamp": "2025-09-25T06:30:01.870Z"
-}
- Error fetching employees: se {message: 'Request failed with status code 500', name: 'AxiosError', code: 'ERR_BAD_RESPONSE', config: {…}, request: XMLHttpRequest, …}
-overrideMethod @ installHook.js:1
-(anonymous) @ index-JuOlyGq0.js:203
-await in (anonymous)
-(anonymous) @ index-JuOlyGq0.js:203
- Current page state: 2
- 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
- 🔄 Intersection triggered, loading more employees... {hasMore: true}
- 🔄 Loading more employees (reset=false) {currentPage: 2, hasMore: false}
- 🔍 Fetching employees: {pageToFetch: 2, currentPage: 2, searchTerm: '', reset: false}
- 🔧 Calling API with: {pageToFetch: 2, searchTerm: '', filterParams: {…}}
- 🔍 Fetching employees: {url: '/employees?page=2&limit=10&role=Admin', page: 2, limit: 10, search: undefined, filters: {…}, …}
- 🐛 DEBUG: [2025-09-25T06:30:01.879Z] Fetching employees: {
-  "url": "/employees?page=2&limit=10&role=Admin",
-  "page": 2,
-  "limit": 10,
-  "filters": {
-    "role": "Admin"
-  },
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=2&limit=10&role=Admin",
-  "timestamp": "2025-09-25T06:30:01.879Z"
-}
- Current page state: 2
- 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-  GET https://plugo-hris.vercel.app/api/employees?page=2&limit=10&role=Admin 500 (Internal Server Error)
-(anonymous) @ index-JuOlyGq0.js:62
-xhr @ index-JuOlyGq0.js:62
-rh @ index-JuOlyGq0.js:64
+_request @ axios.js?v=99b934bb:2230
+request @ axios.js?v=99b934bb:2139
+Axios.<computed> @ axios.js?v=99b934bb:2267
+wrap @ axios.js?v=99b934bb:8
+getAllGrabCodeRequestsForDashboard @ api.ts:288
+fetchDashboardData @ Dashboard.tsx:39
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9887
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9899
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11302
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:374 Failed to write debug log: SyntaxError: Unexpected non-whitespace character after JSON at position 7 (line 1 column 8)
+    at JSON.parse (<anonymous>)
+    at ApiService.writeDebugLog (api.ts:361:25)
+    at api.ts:53:14
+    at async Axios.request (axios.js?v=99b934bb:2139:14)
+    at async ApiService.getAllGrabCodeRequestsForDashboard (api.ts:288:22)
+    at async Promise.all (:5173/index 1)
+    at async fetchDashboardData (Dashboard.tsx:37:72)
+overrideMethod @ hook.js:608
+writeDebugLog @ api.ts:374
+(anonymous) @ api.ts:53
 Promise.then
-_request @ index-JuOlyGq0.js:65
-request @ index-JuOlyGq0.js:64
-ca.<computed> @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:60
-getEmployees @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:203
-(anonymous) @ index-JuOlyGq0.js:203
- ❌ API Error: {url: '/employees?page=2&limit=10&role=Admin', method: 'get', status: 500, message: 'Request failed with status code 500', code: 'ERR_BAD_RESPONSE', …}
-overrideMethod @ installHook.js:1
-(anonymous) @ index-JuOlyGq0.js:65
+_request @ axios.js?v=99b934bb:2230
+request @ axios.js?v=99b934bb:2139
+Axios.<computed> @ axios.js?v=99b934bb:2267
+wrap @ axios.js?v=99b934bb:8
+getAllGrabCodeRequestsForDashboard @ api.ts:288
+fetchDashboardData @ Dashboard.tsx:39
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9887
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9899
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11302
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+Dashboard.tsx:72 Failed to fetch dashboard data: AxiosError {message: 'Request failed with status code 404', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
+overrideMethod @ hook.js:608
+fetchDashboardData @ Dashboard.tsx:72
+await in fetchDashboardData
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9887
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9899
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11302
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:288  GET http://localhost:5173/api/grab-codes/dashboard/all?page=1&limit=100 404 (Not Found)
+dispatchXhrRequest @ axios.js?v=99b934bb:1672
+xhr @ axios.js?v=99b934bb:1552
+dispatchRequest @ axios.js?v=99b934bb:2027
 Promise.then
-_request @ index-JuOlyGq0.js:65
-request @ index-JuOlyGq0.js:64
-ca.<computed> @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:60
-getEmployees @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:203
-(anonymous) @ index-JuOlyGq0.js:203
- 🐛 DEBUG: [2025-09-25T06:30:03.766Z] API Error: {
-  "url": "/employees?page=2&limit=10&role=Admin",
-  "method": "get",
-  "status": 500,
-  "message": "Request failed with status code 500",
-  "code": "ERR_BAD_RESPONSE",
-  "baseURL": "/api",
-  "timestamp": "2025-09-25T06:30:03.765Z"
-}
- Error fetching employees: se {message: 'Request failed with status code 500', name: 'AxiosError', code: 'ERR_BAD_RESPONSE', config: {…}, request: XMLHttpRequest, …}
-overrideMethod @ installHook.js:1
-(anonymous) @ index-JuOlyGq0.js:203
-await in (anonymous)
-(anonymous) @ index-JuOlyGq0.js:203
- Current page state: 2
- 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
- 🔄 Intersection triggered, loading more employees... {hasMore: true}
- 🔄 Loading more employees (reset=false) {currentPage: 2, hasMore: false}
- 🔍 Fetching employees: {pageToFetch: 2, currentPage: 2, searchTerm: '', reset: false}
- 🔧 Calling API with: {pageToFetch: 2, searchTerm: '', filterParams: {…}}
- 🔍 Fetching employees: {url: '/employees?page=2&limit=10&role=Admin', page: 2, limit: 10, search: undefined, filters: {…}, …}
- 🐛 DEBUG: [2025-09-25T06:30:03.780Z] Fetching employees: {
-  "url": "/employees?page=2&limit=10&role=Admin",
-  "page": 2,
-  "limit": 10,
-  "filters": {
-    "role": "Admin"
-  },
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=2&limit=10&role=Admin",
-  "timestamp": "2025-09-25T06:30:03.780Z"
-}
- Current page state: 2
- 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
-  GET https://plugo-hris.vercel.app/api/employees?page=2&limit=10&role=Admin 500 (Internal Server Error)
-(anonymous) @ index-JuOlyGq0.js:62
-xhr @ index-JuOlyGq0.js:62
-rh @ index-JuOlyGq0.js:64
+_request @ axios.js?v=99b934bb:2230
+request @ axios.js?v=99b934bb:2139
+Axios.<computed> @ axios.js?v=99b934bb:2267
+wrap @ axios.js?v=99b934bb:8
+getAllGrabCodeRequestsForDashboard @ api.ts:288
+fetchDashboardData @ Dashboard.tsx:39
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10016
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=99b934bb:9995
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10009
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=99b934bb:11461
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11432
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11469
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11309
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:52 ❌ API Error: {url: '/grab-codes/dashboard/all?page=1&limit=100', method: 'get', status: 404, message: 'Request failed with status code 404', code: 'ERR_BAD_REQUEST', …}
+overrideMethod @ hook.js:608
+(anonymous) @ api.ts:52
 Promise.then
-_request @ index-JuOlyGq0.js:65
-request @ index-JuOlyGq0.js:64
-ca.<computed> @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:60
-getEmployees @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:203
-(anonymous) @ index-JuOlyGq0.js:203
- ❌ API Error: {url: '/employees?page=2&limit=10&role=Admin', method: 'get', status: 500, message: 'Request failed with status code 500', code: 'ERR_BAD_RESPONSE', …}
-overrideMethod @ installHook.js:1
-(anonymous) @ index-JuOlyGq0.js:65
+_request @ axios.js?v=99b934bb:2230
+request @ axios.js?v=99b934bb:2139
+Axios.<computed> @ axios.js?v=99b934bb:2267
+wrap @ axios.js?v=99b934bb:8
+getAllGrabCodeRequestsForDashboard @ api.ts:288
+fetchDashboardData @ Dashboard.tsx:39
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10016
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=99b934bb:9995
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10009
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=99b934bb:11461
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11432
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11469
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11309
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:374 Failed to write debug log: SyntaxError: Unexpected non-whitespace character after JSON at position 7 (line 1 column 8)
+    at JSON.parse (<anonymous>)
+    at ApiService.writeDebugLog (api.ts:361:25)
+    at api.ts:53:14
+    at async Axios.request (axios.js?v=99b934bb:2139:14)
+    at async ApiService.getAllGrabCodeRequestsForDashboard (api.ts:288:22)
+    at async Promise.all (:5173/index 1)
+    at async fetchDashboardData (Dashboard.tsx:37:72)
+overrideMethod @ hook.js:608
+writeDebugLog @ api.ts:374
+(anonymous) @ api.ts:53
 Promise.then
-_request @ index-JuOlyGq0.js:65
-request @ index-JuOlyGq0.js:64
-ca.<computed> @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:60
-getEmployees @ index-JuOlyGq0.js:65
-(anonymous) @ index-JuOlyGq0.js:203
-(anonymous) @ index-JuOlyGq0.js:203
- 🐛 DEBUG: [2025-09-25T06:30:05.146Z] API Error: {
-  "url": "/employees?page=2&limit=10&role=Admin",
-  "method": "get",
-  "status": 500,
-  "message": "Request failed with status code 500",
-  "code": "ERR_BAD_RESPONSE",
-  "baseURL": "/api",
-  "timestamp": "2025-09-25T06:30:05.145Z"
-}
- Error fetching employees: se {message: 'Request failed with status code 500', name: 'AxiosError', code: 'ERR_BAD_RESPONSE', config: {…}, request: XMLHttpRequest, …}
-overrideMethod @ installHook.js:1
-(anonymous) @ index-JuOlyGq0.js:203
-await in (anonymous)
-(anonymous) @ index-JuOlyGq0.js:203
- Current page state: 2
- 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
- 🔄 Intersection triggered, loading more employees... {hasMore: true}
- 🔄 Loading more employees (reset=false) {currentPage: 2, hasMore: false}
- 🔍 Fetching employees: {pageToFetch: 2, currentPage: 2, searchTerm: '', reset: false}
- 🔧 Calling API with: {pageToFetch: 2, searchTerm: '', filterParams: {…}}
- 🔍 Fetching employees: {url: '/employees?page=2&limit=10&role=Admin', page: 2, limit: 10, search: undefined, filters: {…}, …}
- 🐛 DEBUG: [2025-09-25T06:30:05.164Z] Fetching employees: {
-  "url": "/employees?page=2&limit=10&role=Admin",
-  "page": 2,
-  "limit": 10,
-  "filters": {
-    "role": "Admin"
-  },
-  "fullURL": "https://plugo-hris.vercel.app/api/employees?page=2&limit=10&role=Admin",
-  "timestamp": "2025-09-25T06:30:05.164Z"
-}
- Current page state: 2
- 🚫 Intersection observer blocked: {loading: false, loadingMore: true}
+_request @ axios.js?v=99b934bb:2230
+request @ axios.js?v=99b934bb:2139
+Axios.<computed> @ axios.js?v=99b934bb:2267
+wrap @ axios.js?v=99b934bb:8
+getAllGrabCodeRequestsForDashboard @ api.ts:288
+fetchDashboardData @ Dashboard.tsx:39
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10016
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=99b934bb:9995
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10009
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=99b934bb:11461
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11432
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11469
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11309
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+Dashboard.tsx:72 Failed to fetch dashboard data: AxiosError {message: 'Request failed with status code 404', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
+overrideMethod @ hook.js:608
+fetchDashboardData @ Dashboard.tsx:72
+await in fetchDashboardData
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10016
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=99b934bb:9995
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10009
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=99b934bb:11461
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11432
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11469
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11309
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:38 ✅ API Response: /leaves/dashboard/all?page=1&limit=100 200
+api.ts:38 ✅ API Response: /employees?page=1&limit=10 200
+api.ts:123 📊 Employees response: {count: 10, total: 35, status: 200}
+api.ts:374 Failed to write debug log: SyntaxError: Unexpected non-whitespace character after JSON at position 7 (line 1 column 8)
+    at JSON.parse (<anonymous>)
+    at ApiService.writeDebugLog (api.ts:361:25)
+    at ApiService.getEmployees (api.ts:124:10)
+    at async Promise.all (:5173/index 2)
+overrideMethod @ hook.js:608
+writeDebugLog @ api.ts:374
+getEmployees @ api.ts:124
+await in getEmployees
+fetchDashboardData @ Dashboard.tsx:40
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9887
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9881
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9984
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=99b934bb:9868
+commitPassiveMountOnFiber @ react-dom_client.js?v=99b934bb:9899
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11302
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
+api.ts:38 ✅ API Response: /leaves/dashboard/all?page=1&limit=100 200
+api.ts:38 ✅ API Response: /employees?page=1&limit=10 200
+api.ts:123 📊 Employees response: {count: 10, total: 35, status: 200}
+api.ts:374 Failed to write debug log: SyntaxError: Unexpected non-whitespace character after JSON at position 7 (line 1 column 8)
+    at JSON.parse (<anonymous>)
+    at ApiService.writeDebugLog (api.ts:361:25)
+    at ApiService.getEmployees (api.ts:124:10)
+    at async Promise.all (:5173/index 2)
+overrideMethod @ hook.js:608
+writeDebugLog @ api.ts:374
+getEmployees @ api.ts:124
+await in getEmployees
+fetchDashboardData @ Dashboard.tsx:40
+(anonymous) @ Dashboard.tsx:29
+react_stack_bottom_frame @ react-dom_client.js?v=99b934bb:17486
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+commitHookEffectListMount @ react-dom_client.js?v=99b934bb:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=99b934bb:8518
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10016
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=99b934bb:9995
+reconnectPassiveEffects @ react-dom_client.js?v=99b934bb:10009
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=99b934bb:11461
+runWithFiberInDEV @ react-dom_client.js?v=99b934bb:1485
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11432
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11438
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=99b934bb:11469
+flushPassiveEffects @ react-dom_client.js?v=99b934bb:11309
+(anonymous) @ react-dom_client.js?v=99b934bb:11060
+performWorkUntilDeadline @ react-dom_client.js?v=99b934bb:36
