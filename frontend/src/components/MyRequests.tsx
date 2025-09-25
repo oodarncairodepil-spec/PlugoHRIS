@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, FileText, Car, Filter, Copy } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, FileText, Car, Filter, Copy, Paperclip } from 'lucide-react';
 import { apiService } from '../services/api';
 
 const MyRequests: React.FC = () => {
@@ -249,6 +249,24 @@ const MyRequests: React.FC = () => {
                         </div>
                       )}
                       
+                      {/* Document Links for Leave Requests */}
+                      {request.request_type === 'leave' && request.document_links && request.document_links.length > 0 && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center mb-2">
+                            <Paperclip className="h-4 w-4 text-gray-600 mr-2" />
+                            <span className="text-sm font-medium text-gray-700">Attached Documents:</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {request.document_links.map((document: string, index: number) => (
+                              <div key={index} className="flex items-center bg-white border border-gray-200 rounded px-3 py-1 text-sm">
+                                <FileText className="h-3 w-3 text-blue-500 mr-2" />
+                                <span className="text-gray-700">{document}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="mt-2 text-xs text-gray-500">
                         Submitted: {formatDate(request.created_at)}
                       </div>
@@ -258,7 +276,20 @@ const MyRequests: React.FC = () => {
                           <span className="font-medium">Approved on:</span> {formatDate(request.approved_at)}
                           {request.request_type === 'grab' && request.approved_codes && request.approved_codes.length > 0 && (
                             <div className="mt-2">
-                              <span className="font-medium">Approved Codes:</span>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium">Approved Codes:</span>
+                                <button
+                                  onClick={() => {
+                                    const allCodes = request.approved_codes.join(', ');
+                                    navigator.clipboard.writeText(allCodes);
+                                  }}
+                                  className="flex items-center px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                  title="Copy all codes"
+                                >
+                                  <Copy className="h-3 w-3 mr-1" />
+                                  Copy All
+                                </button>
+                              </div>
                               <div className="flex flex-wrap gap-2 mt-1">
                                 {request.approved_codes.map((code: string, index: number) => (
                                   <div key={index} className="flex items-center bg-green-100 text-green-800 rounded px-2 py-1">

@@ -4,6 +4,7 @@ import {
   getAllEmployees,
   getEmployeeById,
   updateEmployee,
+  deleteEmployee,
   generateNewPassword,
   getAllManagers,
   validateEmployeeCreation
@@ -18,6 +19,7 @@ router.use(requireAuth);
 // Admin only routes
 router.post('/', requireHR, validateEmployeeCreation, createEmployee);
 router.put('/:id', requireHR, updateEmployee);
+router.delete('/:id', requireHR, deleteEmployee);
 router.post('/:id/generate-password', requireHR, generateNewPassword);
 router.get('/managers/list', requireHR, getAllManagers);
 

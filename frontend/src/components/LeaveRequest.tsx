@@ -15,7 +15,8 @@ const LeaveRequest: React.FC = () => {
     leave_type_id: '',
     start_date: '',
     end_date: '',
-    reason: ''
+    reason: '',
+    document_links: [] as string[]
   });
   const [grabFormData, setGrabFormData] = useState({
     service_needed: '',
@@ -27,6 +28,7 @@ const LeaveRequest: React.FC = () => {
     code_needed: ''
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [documentFiles, setDocumentFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -74,6 +76,15 @@ const LeaveRequest: React.FC = () => {
     setSelectedFile(file);
   };
 
+  const handleDocumentFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setDocumentFiles(files);
+  };
+
+  const removeDocumentFile = (index: number) => {
+    setDocumentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const calculateDays = () => {
     if (formData.start_date && formData.end_date) {
       const start = new Date(formData.start_date);
@@ -100,11 +111,22 @@ const LeaveRequest: React.FC = () => {
         throw new Error('End date must be after start date');
       }
 
+      // Check if selected leave type requires documents
+      const selectedLeaveType = leaveTypes.find(type => type.id === formData.leave_type_id);
+      if (selectedLeaveType?.requires_document && documentFiles.length === 0) {
+        throw new Error('This leave type requires document attachments');
+      }
+
+      // For now, we'll store file names as document_links
+      // In a real implementation, you'd upload files to a storage service first
+      const document_links = documentFiles.map(file => file.name);
+
       const requestData = {
         leave_type_id: formData.leave_type_id,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        reason: formData.reason
+        reason: formData.reason,
+        document_links: document_links.length > 0 ? document_links : undefined
       };
 
       await apiService.createLeaveRequest(requestData);
@@ -532,6 +554,54 @@ const LeaveRequest: React.FC = () => {
               <p className="text-sm text-orange-600 mt-2">
                 <AlertCircle className="inline h-4 w-4 mr-1" />
                 If you can't provide the affidavit, your leave will be deducted from annual leave.
+              </p>
+            </div>
+          )}
+
+          {/* Document Upload for Leave Types that Require Documents */}
+          {leaveTypes.find(type => type.id === formData.leave_type_id)?.requires_document && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Required Documents *
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                <input
+                  type="file"
+                  id="document_upload"
+                  accept="image/*,.pdf,.doc,.docx"
+                  onChange={handleDocumentFilesChange}
+                  className="hidden"
+                  multiple
+                />
+                <label htmlFor="document_upload" className="cursor-pointer">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-sm text-gray-600 mb-2">
+                    {documentFiles.length > 0 ? `${documentFiles.length} file(s) selected` : 'Click to upload or drag and drop'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Accepted formats: Images, PDF, DOC, DOCX (Multiple files allowed)
+                  </p>
+                </label>
+              </div>
+              {documentFiles.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {documentFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                      <span className="text-sm text-gray-700">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeDocumentFile(index)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-sm text-red-600 mt-2">
+                <AlertCircle className="inline h-4 w-4 mr-1" />
+                This leave type requires document attachments.
               </p>
             </div>
           )}

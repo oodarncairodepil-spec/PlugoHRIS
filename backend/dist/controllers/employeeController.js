@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllManagers = exports.generateNewPassword = exports.updateEmployee = exports.getEmployeeById = exports.getAllEmployees = exports.createEmployee = exports.validateEmployeeCreation = void 0;
+exports.deleteEmployee = exports.getAllManagers = exports.generateNewPassword = exports.updateEmployee = exports.getEmployeeById = exports.getAllEmployees = exports.createEmployee = exports.validateEmployeeCreation = void 0;
 const supabase_1 = require("../utils/supabase");
 const authController_1 = require("./authController");
 const express_validator_1 = require("express-validator");
@@ -9,7 +9,7 @@ exports.validateEmployeeCreation = [
     (0, express_validator_1.body)('full_name').trim().isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
     (0, express_validator_1.body)('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
     (0, express_validator_1.body)('nik').trim().isLength({ min: 3 }).withMessage('NIK must be at least 3 characters'),
-    (0, express_validator_1.body)('division').trim().isLength({ min: 2 }).withMessage('Division is required'),
+    (0, express_validator_1.body)('department_id').isUUID().withMessage('Department ID must be a valid UUID'),
     (0, express_validator_1.body)('employment_type').isIn(['Permanent', 'Contract']).withMessage('Employment type must be Permanent or Contract'),
     (0, express_validator_1.body)('leave_balance').isInt({ min: 0 }).withMessage('Leave balance must be a positive number'),
     (0, express_validator_1.body)('start_date').isISO8601().withMessage('Valid start date is required'),
@@ -27,7 +27,7 @@ const createEmployee = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const { full_name, email, nik, division, employment_type, leave_balance, start_date, role = 'Employee', manager_id, phone, address, position, } = req.body;
+        const { full_name, email, nik, department_id, employment_type, leave_balance, start_date, role = 'Employee', manager_id, phone, address, position, } = req.body;
         // Generate random password
         const plainPassword = (0, authController_1.generateRandomPassword)();
         const password_hash = await (0, authController_1.hashPassword)(plainPassword);
@@ -64,6 +64,17 @@ const createEmployee = async (req, res) => {
                 return res.status(400).json({ error: 'Assigned manager must have Manager or Admin role' });
             }
         }
+        // Validate department exists if department_id is provided
+        if (department_id) {
+            const { data: department, error: deptError } = await supabase_1.supabaseAdmin
+                .from('departments')
+                .select('id')
+                .eq('id', department_id)
+                .single();
+            if (deptError || !department) {
+                return res.status(400).json({ error: 'Invalid department ID' });
+            }
+        }
         // Create employee
         const { data: newEmployee, error } = await supabase_1.supabaseAdmin
             .from('employees')
@@ -71,7 +82,7 @@ const createEmployee = async (req, res) => {
             full_name,
             email: email.toLowerCase(),
             nik,
-            division,
+            department_id,
             employment_type,
             leave_balance,
             start_date,
@@ -80,21 +91,23 @@ const createEmployee = async (req, res) => {
             password_hash,
             phone: phone || '',
             address: address || '',
-            position: position || division,
+            position: position || '',
             password_changed: false,
             status: 'Active'
         })
             .select(`
-        id, full_name, email, nik, division, employment_type,
+        id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
         phone, address, position, password_changed,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `)
             .single();
         if (error) {
             console.error('Create employee error:', error);
             return res.status(500).json({ error: 'Failed to create employee' });
         }
+        // Department assignment is handled by employees.department_id - no additional sync needed
         res.status(201).json({
             message: 'Employee created successfully',
             employee: newEmployee,
@@ -115,17 +128,18 @@ const getAllEmployees = async (req, res) => {
         let query = supabase_1.supabaseAdmin
             .from('employees')
             .select(`
-        id, full_name, email, nik, division, employment_type,
+        id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
         phone, address, position, password_changed, manager_id,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `, { count: 'exact' });
         // Apply filters
         if (search) {
             query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,nik.ilike.%${search}%`);
         }
         if (department) {
-            query = query.eq('division', department);
+            query = query.eq('department_id', department);
         }
         if (manager) {
             // Filter by manager name - need to join with manager table
@@ -201,10 +215,11 @@ const getEmployeeById = async (req, res) => {
         let query = supabase_1.supabaseAdmin
             .from('employees')
             .select(`
-        id, full_name, email, nik, division, employment_type,
+        id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at, updated_at,
         phone, address, position, salary, password_changed,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `)
             .eq('id', id);
         // If user is Manager (not Admin), only allow viewing their subordinates
@@ -227,7 +242,16 @@ exports.getEmployeeById = getEmployeeById;
 const updateEmployee = async (req, res) => {
     try {
         const { id } = req.params;
-        const { full_name, division, employment_type, leave_balance, role, manager_id, status, phone, address, position, } = req.body;
+        const { full_name, department_id, employment_type, leave_balance, role, manager_id, status, phone, address, position, } = req.body;
+        // Get current employee data to check for department changes
+        const { data: currentEmployee, error: getCurrentError } = await supabase_1.supabaseAdmin
+            .from('employees')
+            .select('id, department_id')
+            .eq('id', id)
+            .single();
+        if (getCurrentError || !currentEmployee) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
         // Validate manager exists if manager_id is provided
         if (manager_id) {
             const { data: manager } = await supabase_1.supabaseAdmin
@@ -243,11 +267,22 @@ const updateEmployee = async (req, res) => {
                 return res.status(400).json({ error: 'Assigned manager must have Manager or Admin role' });
             }
         }
+        // Validate department exists if department_id is provided
+        if (department_id) {
+            const { data: department, error: deptError } = await supabase_1.supabaseAdmin
+                .from('departments')
+                .select('id')
+                .eq('id', department_id)
+                .single();
+            if (deptError || !department) {
+                return res.status(400).json({ error: 'Invalid department ID' });
+            }
+        }
         const { data: updatedEmployee, error } = await supabase_1.supabaseAdmin
             .from('employees')
             .update({
             full_name,
-            division,
+            department_id,
             employment_type,
             leave_balance,
             role,
@@ -255,19 +290,22 @@ const updateEmployee = async (req, res) => {
             status,
             phone: phone || '',
             address: address || '',
-            position: position || division,
+            position: position || '',
         })
             .eq('id', id)
             .select(`
-        id, full_name, email, nik, division, employment_type,
+        id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, updated_at,
         phone, address, position, salary, password_changed,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `)
             .single();
         if (error) {
+            console.error('Error updating employee:', error);
             return res.status(500).json({ error: 'Failed to update employee' });
         }
+        // No additional synchronization needed - employees.department_id is the single source of truth
         res.json({
             message: 'Employee updated successfully',
             employee: updatedEmployee
@@ -312,7 +350,7 @@ const getAllManagers = async (req, res) => {
     try {
         const { data: managers, error } = await supabase_1.supabaseAdmin
             .from('employees')
-            .select('id, full_name, email, division')
+            .select('id, full_name, email, department_id, department:department_id(id, name)')
             .in('role', ['Manager', 'Admin'])
             .eq('status', 'Active')
             .order('full_name');
@@ -327,4 +365,65 @@ const getAllManagers = async (req, res) => {
     }
 };
 exports.getAllManagers = getAllManagers;
+// Delete employee (Admin only)
+const deleteEmployee = async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Check if employee exists
+        const { data: existingEmployee, error: checkError } = await supabase_1.supabaseAdmin
+            .from('employees')
+            .select('id, full_name')
+            .eq('id', id)
+            .single();
+        if (checkError || !existingEmployee) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
+        // Check if employee has any leave requests
+        const { data: leaveRequests, error: leaveError } = await supabase_1.supabaseAdmin
+            .from('leave_requests')
+            .select('id')
+            .eq('employee_id', id)
+            .limit(1);
+        if (leaveError) {
+            console.error('Error checking leave requests:', leaveError);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        // If employee has leave requests, we should not delete them
+        if (leaveRequests && leaveRequests.length > 0) {
+            return res.status(400).json({
+                error: 'Cannot delete employee with existing leave requests. Please handle leave requests first.'
+            });
+        }
+        // Check if employee is assigned as a manager to other employees
+        const { data: managedEmployees, error: managerError } = await supabase_1.supabaseAdmin
+            .from('employees')
+            .select('id')
+            .eq('manager_id', id)
+            .limit(1);
+        if (managerError) {
+            console.error('Error checking managed employees:', managerError);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (managedEmployees && managedEmployees.length > 0) {
+            return res.status(400).json({
+                error: 'Cannot delete employee who is assigned as a manager to other employees. Please reassign managed employees first.'
+            });
+        }
+        // Delete employee
+        const { error } = await supabase_1.supabaseAdmin
+            .from('employees')
+            .delete()
+            .eq('id', id);
+        if (error) {
+            console.error('Error deleting employee:', error);
+            return res.status(500).json({ error: 'Failed to delete employee' });
+        }
+        res.json({ message: 'Employee deleted successfully' });
+    }
+    catch (error) {
+        console.error('Error in deleteEmployee:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.deleteEmployee = deleteEmployee;
 //# sourceMappingURL=employeeController.js.map

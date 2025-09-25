@@ -7,6 +7,9 @@ import {
   approveLeaveRequest,
   rejectLeaveRequest,
   getLeaveTypes,
+  createLeaveType,
+  updateLeaveType,
+  deleteLeaveType,
   validateLeaveRequest
 } from '../controllers/leaveController';
 import { requireAuth, requireManagerOrHR, requireHR } from '../middleware/auth';
@@ -26,5 +29,10 @@ router.get('/for-approval', requireManagerOrHR, getLeaveRequestsForApproval);
 router.get('/dashboard/all', requireHR, getAllLeaveRequestsForDashboard);
 router.put('/:id/approve', requireManagerOrHR, approveLeaveRequest);
 router.put('/:id/reject', requireManagerOrHR, rejectLeaveRequest);
+
+// Admin only routes for leave types management
+router.post('/types', requireHR, createLeaveType);
+router.put('/types/:id', requireHR, updateLeaveType);
+router.delete('/types/:id', requireHR, deleteLeaveType);
 
 export default router;

@@ -11,7 +11,7 @@ interface EmployeeFormData {
   phone: string;
   address: string;
   position: string;
-  department: string;
+  department: string; // This will store department ID
   hire_date: string;
   leave_balance: number;
   status: 'Active' | 'Inactive';
@@ -24,7 +24,7 @@ interface Manager {
   id: string;
   full_name: string;
   email: string;
-  division: string;
+  department: { id: string; name: string };
 }
 
 interface Department {
@@ -215,7 +215,7 @@ const EmployeeManagement: React.FC = () => {
         phone: employee.phone || '',
         address: employee.address || '',
         position: employee.position || '',
-        department: employee.division || '',
+        department: employee.department_id || '', // Store department ID, not name
         hire_date: employee.start_date ? employee.start_date.split('T')[0] : '',
         leave_balance: employee.leave_balance || 0,
         status: employee.status || 'Active',
@@ -248,7 +248,7 @@ const EmployeeManagement: React.FC = () => {
         // Map frontend fields to backend fields
         const backendData = {
           full_name: formData.name,
-          division: formData.department,
+          department_id: formData.department,
           employment_type: formData.employment_type,
           leave_balance: formData.leave_balance,
           role: formData.role,
@@ -262,6 +262,11 @@ const EmployeeManagement: React.FC = () => {
         console.log('Sending backend data:', backendData);
         await apiService.updateEmployee(editingEmployee.id, backendData as any);
         setSuccess('Employee updated successfully!');
+        
+        // If role changed, refresh managers list to update dropdown
+        if (editingEmployee.role !== backendData.role) {
+          await fetchManagers();
+        }
       } else {
         console.log('Creating new employee');
         // Map frontend fields to backend fields for creation
@@ -269,7 +274,7 @@ const EmployeeManagement: React.FC = () => {
           full_name: formData.name,
           email: formData.email,
           nik: formData.nik,
-          division: formData.department,
+          department_id: formData.department,
           employment_type: formData.employment_type,
           leave_balance: formData.leave_balance,
           start_date: formData.hire_date,
@@ -285,6 +290,12 @@ const EmployeeManagement: React.FC = () => {
         setGeneratedPassword(response.temporary_password);
         setSuccess('Employee created successfully! Temporary password generated.');
         await fetchEmployees(1);
+        
+        // If new employee is Manager or Admin, refresh managers list
+        if (backendData.role === 'Manager' || backendData.role === 'Admin') {
+          await fetchManagers();
+        }
+        
         // Don't close modal immediately for new employees so admin can copy password
         return;
       }
@@ -480,7 +491,7 @@ const EmployeeManagement: React.FC = () => {
                   >
                     <option value="">All Departments</option>
                     {departments.map((department) => (
-                      <option key={department.id} value={department.name}>
+                      <option key={department.id} value={department.id}>
                         {department.name}
                       </option>
                     ))}
@@ -640,7 +651,7 @@ const EmployeeManagement: React.FC = () => {
                       {employee.status}
                     </span>
                     <p className="text-xs text-gray-400 mt-1 text-right">
-                      {employee.division}
+                      {employee.department?.name || 'Unknown Department'}
                     </p>
                   </div>
                 </div>
@@ -816,7 +827,7 @@ const EmployeeManagement: React.FC = () => {
                     >
                       <option value="">Select Department</option>
                       {departments.map((department) => (
-                        <option key={department.id} value={department.name}>
+                        <option key={department.id} value={department.id}>
                           {department.name}
                         </option>
                       ))}
@@ -835,11 +846,16 @@ const EmployeeManagement: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">No Manager</option>
-                      {managers.map((manager) => (
-                        <option key={manager.id} value={manager.id}>
-                          {manager.full_name} - {manager.division}
-                        </option>
-                      ))}
+                      {managers
+                        .filter((manager) => {
+                          // Prevent self-assignment: exclude current employee from manager options
+                          return editingEmployee ? manager.id !== editingEmployee.id : true;
+                        })
+                        .map((manager) => (
+                          <option key={manager.id} value={manager.id}>
+                            {manager.full_name} - {manager.department?.name || 'Unknown Department'}
+                          </option>
+                        ))}
                     </select>
                   </div>
 

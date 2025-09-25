@@ -24,7 +24,7 @@ const calculateMonthsJoined = (joinDate: string): number => {
 // Calculate leave balance based on employment type and months joined
 const calculateLeaveBalance = (employmentType: 'Permanent' | 'Contract', monthsJoined: number): number => {
   const rate = employmentType === 'Permanent' ? 1.25 : 1.0;
-  return Math.floor(monthsJoined * rate);
+  return monthsJoined * rate;
 };
 
 // Check if employee should get balance this month (16th day rule)

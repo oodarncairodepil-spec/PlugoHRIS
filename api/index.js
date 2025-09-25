@@ -38,10 +38,20 @@ app.get('/api/health', (req, res) => {
 const auth_1 = __importDefault(require("./routes/auth"));
 const employees_1 = __importDefault(require("./routes/employees"));
 const leaves_1 = __importDefault(require("./routes/leaves"));
+const departments_1 = __importDefault(require("./routes/departments"));
+const leaveBalance_1 = __importDefault(require("./routes/leaveBalance"));
+const grabCodeRoutes_1 = __importDefault(require("./routes/grabCodeRoutes"));
+const services_1 = __importDefault(require("./routes/services"));
+const requests_1 = __importDefault(require("./routes/requests"));
 // API routes
 app.use('/api/auth', auth_1.default);
 app.use('/api/employees', employees_1.default);
 app.use('/api/leaves', leaves_1.default);
+app.use('/api/departments', departments_1.default);
+app.use('/api/leave-balance', leaveBalance_1.default);
+app.use('/api/grab-code-requests', grabCodeRoutes_1.default);
+app.use('/api/services', services_1.default);
+app.use('/api/requests', requests_1.default);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -52,7 +62,7 @@ app.use('*', (req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📱 Leave Request API ready at http://localhost:${PORT}`);
+    console.log(`✅ Backend server with Grab Code API restarted successfully`);
+    console.log(`🚀 Leave Request API server is running on port ${PORT}`);
 });
 //# sourceMappingURL=index.js.map

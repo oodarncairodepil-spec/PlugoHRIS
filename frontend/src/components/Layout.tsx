@@ -16,7 +16,8 @@ import {
   ChevronDown,
   ChevronRight,
   Calculator,
-  Cog
+  Cog,
+  FileText
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -56,6 +57,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       { name: 'Employees', href: '/employees', icon: Users, current: location.pathname === '/employees' },
       { name: 'Departments', href: '/departments', icon: Building2, current: location.pathname === '/departments' },
       { name: 'Services', href: '/services', icon: Cog, current: location.pathname === '/services' },
+      { name: 'Leave Types', href: '/leave-types', icon: FileText, current: location.pathname === '/leave-types' },
       { name: 'Balance Checker', href: '/leave-balance-checker', icon: Calculator, current: location.pathname === '/leave-balance-checker' }
     ];
   };

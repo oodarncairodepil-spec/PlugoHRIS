@@ -10,7 +10,11 @@ import {
   Users, 
   FileText,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  X,
+  Eye,
+  Copy,
+  Paperclip
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -24,6 +28,8 @@ const Dashboard: React.FC = () => {
   });
   const [recentRequests, setRecentRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -37,7 +43,7 @@ const Dashboard: React.FC = () => {
       const [leaveRequestsData, grabCodeRequestsData, employeesData] = await Promise.all([
         apiService.getAllLeaveRequestsForDashboard(),
         apiService.getAllGrabCodeRequestsForDashboard(),
-        apiService.getEmployees()
+        apiService.getEmployees(1, 1000, undefined, { status: 'Active' })
       ]);
       
       const allLeaveRequests = leaveRequestsData.leave_requests || [];
@@ -58,7 +64,7 @@ const Dashboard: React.FC = () => {
         pendingRequests: pendingLeave + pendingGrab,
         approvedRequests: approvedLeave + approvedGrab,
         rejectedRequests: rejectedLeave + rejectedGrab,
-        totalEmployees: employeesData.employees?.length || 0
+        totalEmployees: employeesData.total || 0
       });
       
       // Show recent requests from both leave and grab code requests
@@ -96,6 +102,30 @@ const Dashboard: React.FC = () => {
       default:
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
     }
+  };
+
+  const handleRequestClick = (request: any) => {
+    setSelectedRequest(request);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedRequest(null);
+    setShowModal(false);
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // You could add a toast notification here if needed
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  const copyAllCodes = async (codes: string[]) => {
+    const allCodes = codes.join(', ');
+    await copyToClipboard(allCodes);
   };
 
   if (loading) {
@@ -277,7 +307,7 @@ const Dashboard: React.FC = () => {
             </li>
           ) : (
             recentRequests.map((request) => (
-              <li key={request.id} className="px-4 py-4 sm:px-6">
+              <li key={request.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50 cursor-pointer" onClick={() => handleRequestClick(request)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     {getStatusIcon(request.status)}
@@ -289,7 +319,7 @@ const Dashboard: React.FC = () => {
                         <p className="text-sm font-medium text-gray-900">
                           {request.type === 'Leave' 
                             ? (typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Leave Request')
-                            : `${request.codes_requested || request.days_requested || 1} Grab Code${(request.codes_requested || request.days_requested || 1) > 1 ? 's' : ''}`
+                            : `${request.code_needed || 1} Grab Code${(request.code_needed || 1) > 1 ? 's' : ''}`
                           }
                         </p>
                         <p className="ml-2 text-sm text-gray-500">
@@ -311,6 +341,7 @@ const Dashboard: React.FC = () => {
                     <span className={getStatusBadge(request.status)}>
                       {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                     </span>
+                    <Eye className="h-4 w-4 text-gray-400 ml-2" />
                   </div>
                 </div>
               </li>
@@ -318,6 +349,177 @@ const Dashboard: React.FC = () => {
           )}
         </ul>
       </div>
+
+      {/* Modal for Request Details */}
+      {showModal && selectedRequest && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                {selectedRequest.type} Request Details
+              </h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Employee</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.employee?.full_name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <div className="mt-1">
+                    <span className={getStatusBadge(selectedRequest.status)}>
+                      {selectedRequest.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {selectedRequest.type === 'Leave' ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Leave Type</label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {typeof selectedRequest.leave_type === 'string' 
+                          ? selectedRequest.leave_type 
+                          : selectedRequest.leave_type?.name || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Duration</label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {new Date(selectedRequest.start_date).toLocaleDateString()} - {new Date(selectedRequest.end_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedRequest.reason && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Reason</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedRequest.reason}</p>
+                    </div>
+                  )}
+                  
+                  {/* Document Links for Leave Requests */}
+                  {selectedRequest.document_links && selectedRequest.document_links.length > 0 && (
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center mb-2">
+                        <Paperclip className="h-4 w-4 text-gray-600 mr-2" />
+                        <span className="text-sm font-medium text-gray-700">Attached Documents:</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedRequest.document_links.map((document: string, index: number) => (
+                          <div key={index} className="flex items-center bg-white border border-gray-200 rounded px-3 py-1 text-sm">
+                            <FileText className="h-3 w-3 text-blue-500 mr-2" />
+                            <span className="text-gray-700">{document}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Service Type</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedRequest.service_needed}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Codes Needed</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedRequest.code_needed || 1}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Usage Date & Time</label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {selectedRequest.usage_date ? new Date(selectedRequest.usage_date).toLocaleDateString() : 'N/A'} at {selectedRequest.usage_time || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Request Date</label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {new Date(selectedRequest.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedRequest.purpose && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Purpose</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedRequest.purpose}</p>
+                    </div>
+                  )}
+                  {selectedRequest.counterpart_name && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Counterpart</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedRequest.counterpart_name}</p>
+                    </div>
+                  )}
+                  {selectedRequest.meeting_location && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Meeting Location</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedRequest.meeting_location}</p>
+                    </div>
+                  )}
+                  {selectedRequest.approved_codes && selectedRequest.approved_codes.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700">Approved Codes</label>
+                        <button
+                          onClick={() => copyAllCodes(selectedRequest.approved_codes)}
+                          className="flex items-center px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                          title="Copy all codes"
+                        >
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copy All
+                        </button>
+                      </div>
+                      <div className="mt-1 space-y-1">
+                        {selectedRequest.approved_codes.map((code: string, index: number) => (
+                           <div key={index} className="flex items-center justify-between text-sm text-gray-900 bg-green-50 px-2 py-1 rounded border">
+                             <span>Code {index + 1}: {code}</span>
+                             <button
+                               onClick={() => copyToClipboard(code)}
+                               className="flex items-center text-blue-600 hover:text-blue-800 ml-2 p-1 hover:bg-blue-100 rounded transition-colors"
+                               title="Copy code"
+                             >
+                               <Copy className="h-3 w-3" />
+                             </button>
+                           </div>
+                         ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {selectedRequest.admin_comment && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Admin Comment</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.admin_comment}</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Filter, User, MessageSquare, Car } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Filter, User, MessageSquare, Car, Paperclip, FileText } from 'lucide-react';
 // import { useAuth } from '../contexts/AuthContext'; // Commented out - unused
 import { apiService } from '../services/api';
 import type { LeaveRequest, GrabCodeRequest } from '../types';
@@ -333,7 +333,7 @@ const ApproveRequests: React.FC = () => {
                           {request.employee?.full_name || 'Unknown Employee'}
                         </span>
                         <span className="ml-2 text-gray-500">
-                          ({request.employee?.division || 'Unknown Division'})
+                          ({request.employee?.department?.name || 'Unknown Department'})
                         </span>
                       </div>
                       
@@ -358,6 +358,24 @@ const ApproveRequests: React.FC = () => {
                               <span className="font-medium">Reason:</span> {request.reason}
                             </p>
                           </div>
+                          
+                          {/* Document Links for Leave Requests */}
+                          {request.document_links && request.document_links.length > 0 && (
+                            <div className="mb-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center mb-2">
+                                <Paperclip className="h-4 w-4 text-gray-600 mr-2" />
+                                <span className="text-sm font-medium text-gray-700">Attached Documents:</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {request.document_links.map((document: string, index: number) => (
+                                  <div key={index} className="flex items-center bg-white border border-gray-200 rounded px-3 py-1 text-sm">
+                                    <FileText className="h-3 w-3 text-blue-500 mr-2" />
+                                    <span className="text-gray-700">{document}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </>
                       ) : (
                         <>

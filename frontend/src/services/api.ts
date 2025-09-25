@@ -145,7 +145,7 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
     return response.data;
   }
 
-  async getManagers(): Promise<{ managers: { id: string; full_name: string; email: string; division: string }[] }> {
+  async getManagers(): Promise<{ managers: { id: string; full_name: string; email: string; department: { id: string; name: string } }[] }> {
     const response = await this.api.get('/employees/managers/list');
     return response.data;
   }
@@ -200,6 +200,20 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
   async getLeaveTypes(): Promise<LeaveType[]> {
     const response: AxiosResponse<{ leave_types: LeaveType[] }> = await this.api.get('/leaves/types');
     return response.data.leave_types;
+  }
+
+  async createLeaveType(leaveType: { name: string; description: string; max_days_per_year?: number; requires_approval?: boolean }): Promise<LeaveType> {
+    const response: AxiosResponse<{ leave_type: LeaveType }> = await this.api.post('/leaves/types', leaveType);
+    return response.data.leave_type;
+  }
+
+  async updateLeaveType(id: string, leaveType: { name: string; description: string; max_days_per_year?: number; requires_approval?: boolean }): Promise<LeaveType> {
+    const response: AxiosResponse<{ leave_type: LeaveType }> = await this.api.put(`/leaves/types/${id}`, leaveType);
+    return response.data.leave_type;
+  }
+
+  async deleteLeaveType(id: string): Promise<void> {
+    await this.api.delete(`/leaves/types/${id}`);
   }
 
   // Grab Code Request methods
@@ -358,7 +372,24 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
 
   private writeDebugLog(message: string) {
     try {
-      const logs = JSON.parse(localStorage.getItem('api_debug_logs') || '[]');
+      let logs: any[] = [];
+      const storedLogs = localStorage.getItem('api_debug_logs');
+      
+      if (storedLogs) {
+        try {
+          logs = JSON.parse(storedLogs);
+          // Ensure logs is an array
+          if (!Array.isArray(logs)) {
+            logs = [];
+          }
+        } catch (parseError) {
+          // If parsing fails, clear corrupted data and start fresh
+          console.warn('Corrupted debug logs detected, clearing:', parseError);
+          localStorage.removeItem('api_debug_logs');
+          logs = [];
+        }
+      }
+      
       logs.push({
         timestamp: new Date().toISOString(),
         message
@@ -372,6 +403,12 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
       localStorage.setItem('api_debug_logs', JSON.stringify(logs));
     } catch (error) {
       console.warn('Failed to write debug log:', error);
+      // Clear potentially corrupted data
+      try {
+        localStorage.removeItem('api_debug_logs');
+      } catch (clearError) {
+        console.warn('Failed to clear corrupted debug logs:', clearError);
+      }
     }
   }
 }

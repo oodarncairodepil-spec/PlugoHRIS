@@ -13,7 +13,8 @@ export interface Employee {
   phone: string;
   address: string;
   position: string;
-  division: string;
+  department_id: string;
+  department?: Department;
   start_date: string;
   salary: number;
   leave_balance: number;
@@ -33,6 +34,7 @@ export interface LeaveType {
   description?: string;
   max_days_per_year?: number;
   requires_approval: boolean;
+  requires_document?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +50,7 @@ export interface LeaveRequest {
   total_days: number;
   days_requested: number;
   reason: string;
+  document_links?: string[];
   status: 'Pending' | 'Approved' | 'Rejected';
   approved_by?: string;
   approved_by_user?: Employee;

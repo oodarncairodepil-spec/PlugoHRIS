@@ -9,6 +9,7 @@ router.use(auth_1.requireAuth);
 // Admin only routes
 router.post('/', auth_1.requireHR, employeeController_1.validateEmployeeCreation, employeeController_1.createEmployee);
 router.put('/:id', auth_1.requireHR, employeeController_1.updateEmployee);
+router.delete('/:id', auth_1.requireHR, employeeController_1.deleteEmployee);
 router.post('/:id/generate-password', auth_1.requireHR, employeeController_1.generateNewPassword);
 router.get('/managers/list', auth_1.requireHR, employeeController_1.getAllManagers);
 // Manager and Admin routes

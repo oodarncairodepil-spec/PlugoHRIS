@@ -9,7 +9,7 @@ export const validateEmployeeCreation = [
   body('full_name').trim().isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
   body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
   body('nik').trim().isLength({ min: 3 }).withMessage('NIK must be at least 3 characters'),
-  body('division').trim().isLength({ min: 2 }).withMessage('Division is required'),
+  body('department_id').isUUID().withMessage('Department ID must be a valid UUID'),
   body('employment_type').isIn(['Permanent', 'Contract']).withMessage('Employment type must be Permanent or Contract'),
   body('leave_balance').isInt({ min: 0 }).withMessage('Leave balance must be a positive number'),
   body('start_date').isISO8601().withMessage('Valid start date is required'),
@@ -33,7 +33,7 @@ export const createEmployee = async (req: AuthRequest, res: Response) => {
       full_name,
       email,
       nik,
-      division,
+      department_id,
       employment_type,
       leave_balance,
       start_date,
@@ -89,6 +89,19 @@ export const createEmployee = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Validate department exists if department_id is provided
+    if (department_id) {
+      const { data: department, error: deptError } = await supabaseAdmin
+        .from('departments')
+        .select('id')
+        .eq('id', department_id)
+        .single();
+
+      if (deptError || !department) {
+        return res.status(400).json({ error: 'Invalid department ID' });
+      }
+    }
+
     // Create employee
     const { data: newEmployee, error } = await supabaseAdmin
       .from('employees')
@@ -96,7 +109,7 @@ export const createEmployee = async (req: AuthRequest, res: Response) => {
         full_name,
         email: email.toLowerCase(),
         nik,
-        division,
+        department_id,
         employment_type,
         leave_balance,
         start_date,
@@ -105,16 +118,17 @@ export const createEmployee = async (req: AuthRequest, res: Response) => {
         password_hash,
         phone: phone || '',
         address: address || '',
-        position: position || division,
+        position: position || '',
 
         password_changed: false,
         status: 'Active'
       })
       .select(`
-        id, full_name, email, nik, division, employment_type,
+        id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
         phone, address, position, password_changed,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `)
       .single();
 
@@ -122,6 +136,8 @@ export const createEmployee = async (req: AuthRequest, res: Response) => {
       console.error('Create employee error:', error);
       return res.status(500).json({ error: 'Failed to create employee' });
     }
+
+    // Department assignment is handled by employees.department_id - no additional sync needed
 
     res.status(201).json({
       message: 'Employee created successfully',
@@ -154,10 +170,11 @@ export const getAllEmployees = async (req: AuthRequest, res: Response) => {
     let query = supabaseAdmin
       .from('employees')
       .select(`
-        id, full_name, email, nik, division, employment_type,
+        id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
         phone, address, position, password_changed, manager_id,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `, { count: 'exact' });
 
     // Apply filters
@@ -166,7 +183,7 @@ export const getAllEmployees = async (req: AuthRequest, res: Response) => {
     }
 
     if (department) {
-      query = query.eq('division', department);
+      query = query.eq('department_id', department);
     }
 
     if (manager) {
@@ -260,10 +277,11 @@ export const getEmployeeById = async (req: AuthRequest, res: Response) => {
     let query = supabaseAdmin
       .from('employees')
       .select(`
-        id, full_name, email, nik, division, employment_type,
+        id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at, updated_at,
         phone, address, position, salary, password_changed,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `)
       .eq('id', id);
 
@@ -291,7 +309,7 @@ export const updateEmployee = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const {
       full_name,
-      division,
+      department_id,
       employment_type,
       leave_balance,
       role,
@@ -302,6 +320,17 @@ export const updateEmployee = async (req: AuthRequest, res: Response) => {
       position,
 
     } = req.body;
+
+    // Get current employee data to check for department changes
+    const { data: currentEmployee, error: getCurrentError } = await supabaseAdmin
+      .from('employees')
+      .select('id, department_id')
+      .eq('id', id)
+      .single();
+
+    if (getCurrentError || !currentEmployee) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
 
     // Validate manager exists if manager_id is provided
     if (manager_id) {
@@ -321,11 +350,24 @@ export const updateEmployee = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Validate department exists if department_id is provided
+    if (department_id) {
+      const { data: department, error: deptError } = await supabaseAdmin
+        .from('departments')
+        .select('id')
+        .eq('id', department_id)
+        .single();
+
+      if (deptError || !department) {
+        return res.status(400).json({ error: 'Invalid department ID' });
+      }
+    }
+
     const { data: updatedEmployee, error } = await supabaseAdmin
       .from('employees')
       .update({
         full_name,
-        division,
+        department_id,
         employment_type,
         leave_balance,
         role,
@@ -333,21 +375,25 @@ export const updateEmployee = async (req: AuthRequest, res: Response) => {
         status,
         phone: phone || '',
         address: address || '',
-        position: position || division,
+        position: position || '',
 
       })
       .eq('id', id)
       .select(`
-        id, full_name, email, nik, division, employment_type,
+        id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, updated_at,
         phone, address, position, salary, password_changed,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `)
       .single();
 
     if (error) {
+      console.error('Error updating employee:', error);
       return res.status(500).json({ error: 'Failed to update employee' });
     }
+
+    // No additional synchronization needed - employees.department_id is the single source of truth
 
     res.json({
       message: 'Employee updated successfully',
@@ -395,7 +441,7 @@ export const getAllManagers = async (req: AuthRequest, res: Response) => {
   try {
     const { data: managers, error } = await supabaseAdmin
       .from('employees')
-      .select('id, full_name, email, division')
+      .select('id, full_name, email, department_id, department:department_id(id, name)')
       .in('role', ['Manager', 'Admin'])
       .eq('status', 'Active')
       .order('full_name');
@@ -407,6 +453,78 @@ export const getAllManagers = async (req: AuthRequest, res: Response) => {
     res.json({ managers });
   } catch (error) {
     console.error('Get managers error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete employee (Admin only)
+export const deleteEmployee = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Check if employee exists
+    const { data: existingEmployee, error: checkError } = await supabaseAdmin
+      .from('employees')
+      .select('id, full_name')
+      .eq('id', id)
+      .single();
+
+    if (checkError || !existingEmployee) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    // Check if employee has any leave requests
+    const { data: leaveRequests, error: leaveError } = await supabaseAdmin
+      .from('leave_requests')
+      .select('id')
+      .eq('employee_id', id)
+      .limit(1);
+
+    if (leaveError) {
+      console.error('Error checking leave requests:', leaveError);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    // If employee has leave requests, we should not delete them
+    if (leaveRequests && leaveRequests.length > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete employee with existing leave requests. Please handle leave requests first.' 
+      });
+    }
+
+    // Check if employee is assigned as a manager to other employees
+    const { data: managedEmployees, error: managerError } = await supabaseAdmin
+      .from('employees')
+      .select('id')
+      .eq('manager_id', id)
+      .limit(1);
+
+    if (managerError) {
+      console.error('Error checking managed employees:', managerError);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (managedEmployees && managedEmployees.length > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete employee who is assigned as a manager to other employees. Please reassign managed employees first.' 
+      });
+    }
+
+    // Delete employee
+    const { error } = await supabaseAdmin
+      .from('employees')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting employee:', error);
+      return res.status(500).json({ error: 'Failed to delete employee' });
+    }
+
+    res.json({ message: 'Employee deleted successfully' });
+
+  } catch (error) {
+    console.error('Error in deleteEmployee:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

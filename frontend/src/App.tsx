@@ -11,6 +11,7 @@ import EmployeeManagement from './components/EmployeeManagement';
 import DepartmentManagement from './components/DepartmentManagement';
 import LeaveBalanceChecker from './components/LeaveBalanceChecker';
 import Services from './components/Services';
+import LeaveTypes from './components/LeaveTypes';
 import AdminRoute from './components/AdminRoute';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -52,6 +53,7 @@ function App() {
                     <Route path="/departments" element={<AdminRoute><DepartmentManagement /></AdminRoute>} />
                     <Route path="/leave-balance-checker" element={<AdminRoute><LeaveBalanceChecker /></AdminRoute>} />
                     <Route path="/services" element={<AdminRoute><Services /></AdminRoute>} />
+                    <Route path="/leave-types" element={<AdminRoute><LeaveTypes /></AdminRoute>} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

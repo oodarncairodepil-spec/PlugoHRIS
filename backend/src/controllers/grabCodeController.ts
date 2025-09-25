@@ -84,7 +84,8 @@ export const getGrabCodeRequests = async (req: AuthRequest, res: Response) => {
           full_name,
           email,
           nik,
-          division
+          department_id,
+          department:department_id(id, name)
         ),
         approved_by_user:employees!grab_code_requests_approved_by_fkey(
           id,
@@ -149,7 +150,8 @@ export const getAllGrabCodeRequests = async (req: AuthRequest, res: Response) =>
           full_name,
           email,
           nik,
-          division
+          department_id,
+          department:department_id(id, name)
         ),
         approved_by_user:employees!grab_code_requests_approved_by_fkey(
           id,
@@ -320,7 +322,8 @@ export const getAllGrabCodeRequestsForDashboard = async (req: AuthRequest, res: 
           full_name,
           email,
           nik,
-          division
+          department_id,
+          department:department_id(id, name)
         ),
         approved_by_user:employees!grab_code_requests_approved_by_fkey(
           id,
@@ -375,7 +378,8 @@ export const getGrabCodeRequestById = async (req: AuthRequest, res: Response) =>
           full_name,
           email,
           nik,
-          division
+          department_id,
+          department:department_id(id, name)
         ),
         approved_by_user:employees!grab_code_requests_approved_by_fkey(
           id,

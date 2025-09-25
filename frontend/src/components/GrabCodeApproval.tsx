@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Car, Clock, CheckCircle, XCircle, AlertCircle, Filter, User, MessageSquare } from 'lucide-react';
+import { Car, Clock, CheckCircle, XCircle, AlertCircle, Filter, User, MessageSquare, Copy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import type { GrabCodeRequest } from '../types';
@@ -277,7 +277,7 @@ const GrabCodeApproval: React.FC = () => {
                           {request.employee?.full_name || 'Unknown Employee'}
                         </span>
                         <span className="ml-2 text-gray-500">
-                          ({request.employee?.division || 'Unknown Division'})
+                          ({request.employee?.department?.name || 'Unknown Department'})
                         </span>
                       </div>
                       
@@ -311,17 +311,39 @@ const GrabCodeApproval: React.FC = () => {
                         <div className="text-sm text-green-600">
                           <span className="font-medium">Approved on:</span> {formatDate(request.approved_at)}
                           {request.approved_codes && request.approved_codes.length > 0 && (
-                            <div className="mt-2">
-                              <span className="font-medium">Approved Codes:</span>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {request.approved_codes.map((code, index) => (
-                                  <span key={index} className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono">
-                                    {code}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium">Approved Codes:</span>
+                <button
+                   onClick={() => {
+                     const allCodes = request.approved_codes?.join(', ') || '';
+                     navigator.clipboard.writeText(allCodes);
+                   }}
+                  className="flex items-center px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                  title="Copy all codes"
+                >
+                  <Copy className="h-3 w-3 mr-1" />
+                  Copy All
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {request.approved_codes.map((code, index) => (
+                  <div key={index} className="flex items-center bg-green-100 text-green-800 rounded px-2 py-1">
+                    <span className="font-mono text-xs mr-2">{code}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(code);
+                      }}
+                      className="text-green-600 hover:text-green-800 transition-colors"
+                      title="Copy code"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
                         </div>
                       )}
                       

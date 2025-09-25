@@ -86,9 +86,10 @@ const getProfile = async (req, res) => {
         const { data: employee, error } = await supabase_1.supabase
             .from('employees')
             .select(`
-        id, full_name, email, nik, division, employment_type, 
+        id, full_name, email, nik, department_id, employment_type, 
         leave_balance, status, start_date, role, created_at,
-        manager:manager_id(id, full_name, email)
+        manager:manager_id(id, full_name, email),
+        department:department_id(id, name)
       `)
             .eq('id', req.user.id)
             .single();

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLeaveTypes = exports.rejectLeaveRequest = exports.approveLeaveRequest = exports.getLeaveRequestsForApproval = exports.getMyLeaveRequests = exports.createLeaveRequest = exports.validateLeaveRequest = void 0;
+exports.deleteLeaveType = exports.updateLeaveType = exports.createLeaveType = exports.getLeaveTypes = exports.getAllLeaveRequestsForDashboard = exports.rejectLeaveRequest = exports.approveLeaveRequest = exports.getLeaveRequestsForApproval = exports.getMyLeaveRequests = exports.createLeaveRequest = exports.validateLeaveRequest = void 0;
 const supabase_1 = require("../utils/supabase");
 const express_validator_1 = require("express-validator");
 // Validation rules for leave request creation
@@ -8,7 +8,8 @@ exports.validateLeaveRequest = [
     (0, express_validator_1.body)('leave_type_id').isUUID().withMessage('Valid leave type ID is required'),
     (0, express_validator_1.body)('start_date').isISO8601().withMessage('Valid start date is required'),
     (0, express_validator_1.body)('end_date').isISO8601().withMessage('Valid end date is required'),
-    (0, express_validator_1.body)('reason').optional().trim().isLength({ min: 1 }).withMessage('Reason must not be empty if provided')
+    (0, express_validator_1.body)('reason').optional().trim().isLength({ min: 1 }).withMessage('Reason must not be empty if provided'),
+    (0, express_validator_1.body)('document_links').optional().isArray().withMessage('Document links must be an array')
 ];
 // Calculate business days between two dates
 const calculateBusinessDays = (startDate, endDate) => {
@@ -31,7 +32,7 @@ const createLeaveRequest = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const { leave_type_id, start_date, end_date, reason } = req.body;
+        const { leave_type_id, start_date, end_date, reason, document_links } = req.body;
         const employee_id = req.user.id;
         // Validate dates
         const startDateObj = new Date(start_date);
@@ -91,10 +92,11 @@ const createLeaveRequest = async (req, res) => {
             end_date,
             days_requested,
             reason,
+            document_links,
             status: 'Pending'
         })
             .select(`
-        id, start_date, end_date, days_requested, reason, status, created_at,
+        id, start_date, end_date, days_requested, reason, document_links, status, created_at,
         leave_type:leave_type_id(id, name),
         employee:employee_id(id, full_name, email)
       `)
@@ -122,7 +124,7 @@ const getMyLeaveRequests = async (req, res) => {
         let query = supabase_1.supabase
             .from('leave_requests')
             .select(`
-        id, start_date, end_date, days_requested, reason, status, 
+        id, start_date, end_date, days_requested, reason, document_links, status, 
         created_at, approved_at, rejection_reason,
         leave_type:leave_type_id(id, name),
         employee:employee_id(id, full_name),
@@ -162,10 +164,10 @@ const getLeaveRequestsForApproval = async (req, res) => {
         let query = supabase_1.supabaseAdmin
             .from('leave_requests')
             .select(`
-        id, start_date, end_date, days_requested, reason, status,
+        id, start_date, end_date, days_requested, reason, document_links, status,
         created_at, approved_at, rejection_reason,
         leave_type:leave_type_id(id, name),
-        employee:employee_id(id, full_name, email, division),
+        employee:employee_id(id, full_name, email, department_id, department:department_id(id, name)),
         approved_by_user:approved_by(id, full_name)
       `, { count: 'exact' });
         // If user is Manager (not Admin), only show their subordinates' requests
@@ -337,9 +339,51 @@ const rejectLeaveRequest = async (req, res) => {
 };
 exports.rejectLeaveRequest = rejectLeaveRequest;
 // Get leave types
+// Get all leave requests for admin dashboard (Admin only)
+const getAllLeaveRequestsForDashboard = async (req, res) => {
+    try {
+        // Only allow Admin users
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ error: 'Access denied. Admin role required.' });
+        }
+        const { page = 1, limit = 100 } = req.query;
+        const offset = (Number(page) - 1) * Number(limit);
+        const query = supabase_1.supabaseAdmin
+            .from('leave_requests')
+            .select(`
+        id, start_date, end_date, days_requested, reason, document_links, status,
+        created_at, approved_at, rejection_reason,
+        leave_type:leave_type_id(id, name),
+        employee:employee_id(id, full_name, email, department_id, department:department_id(id, name)),
+        approved_by_user:approved_by(id, full_name)
+      `, { count: 'exact' });
+        // No status filtering - get ALL requests
+        // No employee filtering - get requests from ALL employees
+        const { data: leaveRequests, error, count } = await query
+            .order('created_at', { ascending: false })
+            .range(offset, offset + Number(limit) - 1);
+        if (error) {
+            return res.status(500).json({ error: 'Failed to fetch leave requests' });
+        }
+        res.json({
+            leave_requests: leaveRequests,
+            pagination: {
+                page: Number(page),
+                limit: Number(limit),
+                total: count || 0,
+                pages: Math.ceil((count || 0) / Number(limit))
+            }
+        });
+    }
+    catch (error) {
+        console.error('Get all leave requests for dashboard error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.getAllLeaveRequestsForDashboard = getAllLeaveRequestsForDashboard;
 const getLeaveTypes = async (req, res) => {
     try {
-        const { data: leaveTypes, error } = await supabase_1.supabase
+        const { data: leaveTypes, error } = await supabase_1.supabaseAdmin
             .from('leave_types')
             .select('id, name, description, max_days_per_year, requires_approval')
             .order('name');
@@ -354,4 +398,110 @@ const getLeaveTypes = async (req, res) => {
     }
 };
 exports.getLeaveTypes = getLeaveTypes;
+// Create leave type (Admin only)
+const createLeaveType = async (req, res) => {
+    try {
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ error: 'Access denied. Admin role required.' });
+        }
+        const { name, description, max_days_per_year, requires_approval, requires_document } = req.body;
+        if (!name || !description) {
+            return res.status(400).json({ error: 'Name and description are required' });
+        }
+        const { data: leaveType, error } = await supabase_1.supabaseAdmin
+            .from('leave_types')
+            .insert({
+            name: name.trim(),
+            description: description.trim(),
+            max_days_per_year: max_days_per_year || null,
+            requires_approval: requires_approval !== false,
+            requires_document: requires_document === true
+        })
+            .select()
+            .single();
+        if (error) {
+            if (error.code === '23505') {
+                return res.status(400).json({ error: 'Leave type with this name already exists' });
+            }
+            return res.status(500).json({ error: 'Failed to create leave type' });
+        }
+        res.status(201).json({ leave_type: leaveType });
+    }
+    catch (error) {
+        console.error('Create leave type error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.createLeaveType = createLeaveType;
+// Update leave type (Admin only)
+const updateLeaveType = async (req, res) => {
+    try {
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ error: 'Access denied. Admin role required.' });
+        }
+        const { id } = req.params;
+        const { name, description, max_days_per_year, requires_approval, requires_document } = req.body;
+        if (!name || !description) {
+            return res.status(400).json({ error: 'Name and description are required' });
+        }
+        const { data: leaveType, error } = await supabase_1.supabaseAdmin
+            .from('leave_types')
+            .update({
+            name: name.trim(),
+            description: description.trim(),
+            max_days_per_year: max_days_per_year || null,
+            requires_approval: requires_approval !== false,
+            requires_document: requires_document === true
+        })
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) {
+            if (error.code === '23505') {
+                return res.status(400).json({ error: 'Leave type with this name already exists' });
+            }
+            return res.status(404).json({ error: 'Leave type not found' });
+        }
+        res.json({ leave_type: leaveType });
+    }
+    catch (error) {
+        console.error('Update leave type error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.updateLeaveType = updateLeaveType;
+// Delete leave type (Admin only)
+const deleteLeaveType = async (req, res) => {
+    try {
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ error: 'Access denied. Admin role required.' });
+        }
+        const { id } = req.params;
+        // Check if leave type is being used in any leave requests
+        const { data: existingRequests, error: checkError } = await supabase_1.supabaseAdmin
+            .from('leave_requests')
+            .select('id')
+            .eq('leave_type_id', id)
+            .limit(1);
+        if (checkError) {
+            return res.status(500).json({ error: 'Failed to check leave type usage' });
+        }
+        if (existingRequests && existingRequests.length > 0) {
+            return res.status(400).json({ error: 'Cannot delete leave type that is being used in leave requests' });
+        }
+        const { error } = await supabase_1.supabaseAdmin
+            .from('leave_types')
+            .delete()
+            .eq('id', id);
+        if (error) {
+            return res.status(404).json({ error: 'Leave type not found' });
+        }
+        res.json({ message: 'Leave type deleted successfully' });
+    }
+    catch (error) {
+        console.error('Delete leave type error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.deleteLeaveType = deleteLeaveType;
 //# sourceMappingURL=leaveController.js.map

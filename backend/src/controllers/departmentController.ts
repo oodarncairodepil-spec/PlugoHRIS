@@ -21,7 +21,7 @@ export const createDepartment = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, details, head_id } = req.body;
+    const { name, details, head_id, employee_ids } = req.body;
 
     // Check if department name already exists
     const { data: existingDept, error: checkError } = await supabaseAdmin
@@ -52,6 +52,18 @@ export const createDepartment = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Validate employee_ids if provided
+    if (employee_ids && Array.isArray(employee_ids) && employee_ids.length > 0) {
+      const { data: validEmployees, error: empError } = await supabaseAdmin
+        .from('employees')
+        .select('id')
+        .in('id', employee_ids);
+
+      if (empError || !validEmployees || validEmployees.length !== employee_ids.length) {
+        return res.status(400).json({ error: 'One or more invalid employee IDs' });
+      }
+    }
+
     // Create department
     const { data: department, error } = await supabaseAdmin
       .from('departments')
@@ -69,6 +81,19 @@ export const createDepartment = async (req: AuthRequest, res: Response) => {
     if (error) {
       console.error('Error creating department:', error);
       return res.status(500).json({ error: 'Failed to create department' });
+    }
+
+    // Assign employees to department using employees.department_id
+    if (employee_ids && Array.isArray(employee_ids) && employee_ids.length > 0) {
+      const { error: assignError } = await supabaseAdmin
+        .from('employees')
+        .update({ department_id: department.id })
+        .in('id', employee_ids);
+
+      if (assignError) {
+        console.error('Error assigning employees to department:', assignError);
+        return res.status(500).json({ error: 'Department created but failed to assign employees' });
+      }
     }
 
     res.status(201).json({
@@ -94,8 +119,7 @@ export const getAllDepartments = async (req: AuthRequest, res: Response) => {
       .from('departments')
       .select(`
         *,
-        head:employees!departments_head_id_fkey(id, full_name),
-        department_employees(count)
+        head:employees!departments_head_id_fkey(id, full_name)
       `, { count: 'exact' });
 
     // Apply search filter
@@ -115,10 +139,21 @@ export const getAllDepartments = async (req: AuthRequest, res: Response) => {
 
     const totalPages = Math.ceil((count || 0) / limit);
 
-    // Map the department_employees count to employee_count for frontend compatibility
-    const formattedDepartments = (departments || []).map(dept => ({
-      ...dept,
-      employee_count: dept.department_employees?.[0]?.count || 0
+    // Get employee counts for each department
+    const formattedDepartments = await Promise.all((departments || []).map(async (dept) => {
+      const { count: employeeCount, error: countError } = await supabaseAdmin
+        .from('employees')
+        .select('id', { count: 'exact', head: false })
+        .eq('department_id', dept.id);
+      
+      if (countError) {
+        console.error('Error counting employees for department:', dept.id, countError);
+      }
+      
+      return {
+        ...dept,
+        employee_count: employeeCount || 0
+      };
     }));
 
     res.json({
@@ -146,13 +181,7 @@ export const getDepartmentById = async (req: AuthRequest, res: Response) => {
       .from('departments')
       .select(`
         *,
-        head:employees!departments_head_id_fkey(id, full_name),
-        department_employees(
-          id,
-          position,
-          assigned_at,
-          employee:employees(id, full_name, role, email)
-        )
+        head:employees!departments_head_id_fkey(id, full_name)
       `)
       .eq('id', id)
       .single();
@@ -164,6 +193,21 @@ export const getDepartmentById = async (req: AuthRequest, res: Response) => {
       }
       return res.status(500).json({ error: 'Failed to fetch department' });
     }
+
+    // Fetch employees assigned to this department
+    const { data: employees, error: empError } = await supabaseAdmin
+      .from('employees')
+      .select('id, full_name, role, email, position')
+      .eq('department_id', id)
+      .order('full_name');
+
+    if (empError) {
+      console.error('Error fetching department employees:', empError);
+      return res.status(500).json({ error: 'Failed to fetch department employees' });
+    }
+
+    // Add employees to department object
+    department.employees = employees || [];
 
     res.json({ department });
 
@@ -250,10 +294,22 @@ export const updateDepartment = async (req: AuthRequest, res: Response) => {
 
     // Handle employee assignments if provided
     if (employee_ids && Array.isArray(employee_ids)) {
-      // First, remove all current employees from this department
+      // Validate employee_ids if provided
+      if (employee_ids.length > 0) {
+        const { data: validEmployees, error: empError } = await supabaseAdmin
+          .from('employees')
+          .select('id')
+          .in('id', employee_ids);
+
+        if (empError || !validEmployees || validEmployees.length !== employee_ids.length) {
+          return res.status(400).json({ error: 'One or more invalid employee IDs' });
+        }
+      }
+
+      // First, remove all current employees from this department (set department_id to null)
       const { error: removeError } = await supabaseAdmin
-        .from('department_employees')
-        .delete()
+        .from('employees')
+        .update({ department_id: null })
         .eq('department_id', id);
 
       if (removeError) {
@@ -261,17 +317,12 @@ export const updateDepartment = async (req: AuthRequest, res: Response) => {
         return res.status(500).json({ error: 'Failed to update employee assignments' });
       }
 
-      // Then, assign new employees to this department
+      // Then, assign new employees to this department using employees.department_id
       if (employee_ids.length > 0) {
-        const employeeAssignments = employee_ids.map(employee_id => ({
-          department_id: id,
-          employee_id,
-          assigned_at: new Date().toISOString()
-        }));
-
         const { error: assignError } = await supabaseAdmin
-          .from('department_employees')
-          .insert(employeeAssignments);
+          .from('employees')
+          .update({ department_id: id })
+          .in('id', employee_ids);
 
         if (assignError) {
           console.error('Error assigning employees to department:', assignError);
@@ -309,7 +360,7 @@ export const deleteDepartment = async (req: AuthRequest, res: Response) => {
 
     // Check if department has employees assigned
     const { data: assignedEmployees, error: employeeError } = await supabaseAdmin
-      .from('department_employees')
+      .from('employees')
       .select('id')
       .eq('department_id', id)
       .limit(1);
@@ -348,7 +399,6 @@ export const deleteDepartment = async (req: AuthRequest, res: Response) => {
 export const assignEmployeeToDepartment = async (req: AuthRequest, res: Response) => {
   try {
     const { departmentId, employeeId } = req.params;
-    const { position } = req.body;
 
     // Validate department exists
     const { data: department, error: deptError } = await supabaseAdmin
@@ -361,10 +411,10 @@ export const assignEmployeeToDepartment = async (req: AuthRequest, res: Response
       return res.status(404).json({ error: 'Department not found' });
     }
 
-    // Validate employee exists
+    // Validate employee exists and get current assignment
     const { data: employee, error: empError } = await supabaseAdmin
       .from('employees')
-      .select('id, full_name')
+      .select('id, full_name, department_id')
       .eq('id', employeeId)
       .single();
 
@@ -372,46 +422,30 @@ export const assignEmployeeToDepartment = async (req: AuthRequest, res: Response
       return res.status(404).json({ error: 'Employee not found' });
     }
 
-    // Check if assignment already exists
-    const { data: existingAssignment, error: checkError } = await supabaseAdmin
-      .from('department_employees')
-      .select('id')
-      .eq('department_id', departmentId)
-      .eq('employee_id', employeeId)
-      .single();
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Error checking existing assignment:', checkError);
-      return res.status(500).json({ error: 'Database error' });
-    }
-
-    if (existingAssignment) {
+    // Check if employee is already assigned to this department
+    if (employee.department_id === departmentId) {
       return res.status(400).json({ error: 'Employee is already assigned to this department' });
     }
 
-    // Create assignment
-    const { data: assignment, error } = await supabaseAdmin
-      .from('department_employees')
-      .insert({
-        department_id: departmentId,
-        employee_id: employeeId,
-        position: position || 'Staff'
-      })
+    // Assign employee to department using employees.department_id
+    const { data: updatedEmployee, error } = await supabaseAdmin
+      .from('employees')
+      .update({ department_id: departmentId })
+      .eq('id', employeeId)
       .select(`
-        *,
-        department:departments(id, name),
-        employee:employees(id, full_name, role)
+        id, full_name, role,
+        department:department_id(id, name)
       `)
       .single();
 
     if (error) {
-      console.error('Error creating assignment:', error);
+      console.error('Error assigning employee to department:', error);
       return res.status(500).json({ error: 'Failed to assign employee to department' });
     }
 
     res.status(201).json({
       message: 'Employee assigned to department successfully',
-      assignment
+      employee: updatedEmployee
     });
 
   } catch (error) {
@@ -425,27 +459,29 @@ export const removeEmployeeFromDepartment = async (req: AuthRequest, res: Respon
   try {
     const { departmentId, employeeId } = req.params;
 
-    // Check if assignment exists
-    const { data: assignment, error: checkError } = await supabaseAdmin
-      .from('department_employees')
-      .select('id')
-      .eq('department_id', departmentId)
-      .eq('employee_id', employeeId)
+    // Validate employee exists and is assigned to this department
+    const { data: employee, error: empError } = await supabaseAdmin
+      .from('employees')
+      .select('id, full_name, department_id')
+      .eq('id', employeeId)
       .single();
 
-    if (checkError || !assignment) {
-      return res.status(404).json({ error: 'Employee assignment not found' });
+    if (empError || !employee) {
+      return res.status(404).json({ error: 'Employee not found' });
     }
 
-    // Remove assignment
+    if (employee.department_id !== departmentId) {
+      return res.status(400).json({ error: 'Employee is not assigned to this department' });
+    }
+
+    // Remove assignment by setting department_id to null
     const { error } = await supabaseAdmin
-      .from('department_employees')
-      .delete()
-      .eq('department_id', departmentId)
-      .eq('employee_id', employeeId);
+      .from('employees')
+      .update({ department_id: null })
+      .eq('id', employeeId);
 
     if (error) {
-      console.error('Error removing assignment:', error);
+      console.error('Error removing employee from department:', error);
       return res.status(500).json({ error: 'Failed to remove employee from department' });
     }
 
@@ -484,30 +520,16 @@ export const getDepartmentEmployees = async (req: AuthRequest, res: Response) =>
   try {
     const { id } = req.params;
 
-    const { data: departmentEmployees, error } = await supabaseAdmin
-      .from('department_employees')
-      .select(`
-        position,
-        assigned_at,
-        employee:employees(id, full_name, email, position)
-      `)
+    const { data: employees, error } = await supabaseAdmin
+      .from('employees')
+      .select('id, full_name, email, position, created_at')
       .eq('department_id', id)
-      .order('employee(full_name)');
+      .order('full_name');
 
     if (error) {
       console.error('Error fetching department employees:', error);
       return res.status(500).json({ error: 'Failed to fetch department employees' });
     }
-
-    // Transform the data to match the expected format
-    const employees = departmentEmployees.map((de: any) => ({
-      id: de.employee.id,
-      full_name: de.employee.full_name,
-      email: de.employee.email,
-      position: de.employee.position,
-      department_position: de.position,
-      assigned_at: de.assigned_at
-    }));
 
     res.json({ employees });
 
