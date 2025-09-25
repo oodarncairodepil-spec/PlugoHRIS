@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { user, hasRole } = useAuth();
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalRequests: 0,
     pendingRequests: 0,
