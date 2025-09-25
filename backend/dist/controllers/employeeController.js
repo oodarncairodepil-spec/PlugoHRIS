@@ -161,6 +161,16 @@ const getAllEmployees = async (req, res) => {
         if (error) {
             console.error('Database query error:', error);
             console.error('Query details:', { page, limit, offset, role, filters: { department, manager, hireDateFrom, hireDateTo, employmentType, status } });
+            // If it's a range error (offset beyond data), return empty results
+            if (error.message && error.message.includes('range')) {
+                console.log('Range error - offset beyond available data:', { offset, error: error.message });
+                return res.json({
+                    employees: [],
+                    total: 0,
+                    page: Number(page),
+                    totalPages: 0
+                });
+            }
             return res.status(500).json({ error: 'Failed to fetch employees' });
         }
         // If manager filter is specified, filter by manager name in the results
