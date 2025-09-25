@@ -1,0 +1,29 @@
+{
+  "name": "plugo-hris",
+  "version": "1.0.0",
+  "description": "PlugoHRIS - Human Resource Information System",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend && npm run copy:backend",
+    "build:backend": "cd backend && npm install && npm run build",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "copy:backend": "cp -r backend/dist/* api/ 2>/dev/null || true",
+    "start": "cd backend && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "clean": "rm -rf backend/dist frontend/dist backend/node_modules frontend/node_modules node_modules",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["hr", "hris", "human-resources", "employee-management"],
+  "author": "Plugo",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}

@@ -6,11 +6,12 @@ class ApiService {
   private api: AxiosInstance;
 
   constructor() {
-    console.log('🔧 ApiService: Initializing with baseURL: /api');
-    this.writeDebugLog('ApiService initialized with baseURL: /api');
+    const baseURL = '/api';
+    console.log('🔧 ApiService: Initializing with baseURL:', baseURL);
+    this.writeDebugLog(`ApiService initialized with baseURL: ${baseURL}`);
     
     this.api = axios.create({
-      baseURL: '/api',
+      baseURL,
       headers: {
         'Content-Type': 'application/json',
       },

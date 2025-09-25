@@ -8,6 +8,7 @@ import LeaveRequest from './components/LeaveRequest';
 import MyRequests from './components/MyRequests';
 import ApproveRequests from './components/ApproveRequests';
 import EmployeeManagement from './components/EmployeeManagement';
+import AdminRoute from './components/AdminRoute';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -44,7 +45,7 @@ function App() {
                     <Route path="/my-requests" element={<MyRequests />} />
                     <Route path="/submit-request" element={<div className="text-center py-8"><h2 className="text-xl font-semibold text-gray-900">Submit Request - Coming Soon</h2></div>} />
                     <Route path="/approve-requests" element={<ApproveRequests />} />
-                    <Route path="/employees" element={<EmployeeManagement />} />
+                    <Route path="/employees" element={<AdminRoute><EmployeeManagement /></AdminRoute>} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
