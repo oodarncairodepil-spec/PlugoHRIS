@@ -18,7 +18,18 @@ const Login: React.FC = () => {
     try {
       await login({ email, password });
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      // Handle different error formats
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
