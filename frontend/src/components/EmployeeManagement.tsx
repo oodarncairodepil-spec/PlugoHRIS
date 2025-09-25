@@ -174,7 +174,7 @@ const EmployeeManagement: React.FC = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [searchTerm]);
+  }, [searchTerm, filters]);
 
   useEffect(() => {
     // Load initial data on component mount
