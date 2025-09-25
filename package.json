@@ -8,6 +8,7 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "npm run build:backend && npm run build:frontend && npm run copy:backend",
+    "vercel-build": "npm run build:backend && npm run build:frontend && npm run copy:backend",
     "build:backend": "cd backend && npm install && npm run build",
     "build:frontend": "cd frontend && npm install && npm run build",
     "copy:backend": "cp -r backend/dist/* api/ 2>/dev/null || true",
