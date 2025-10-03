@@ -170,7 +170,7 @@ const getAllEmployees = async (req, res) => {
         console.log('Query parameters:', { page, limit, offset, role, department, search, manager, hireDateFrom, hireDateTo, employmentType, status });
         console.log('User role:', req.user?.role);
         const { data: employees, error, count } = await query
-            .order('start_date', { ascending: false })
+            .order('created_at', { ascending: false })
             .range(offset, offset + Number(limit) - 1);
         if (error) {
             console.error('Database query error:', error);

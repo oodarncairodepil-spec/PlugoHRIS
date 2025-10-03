@@ -9,6 +9,9 @@ interface LeaveTypeForm {
   max_days_per_year: number | '';
   requires_approval: boolean;
   requires_document: boolean;
+  is_active: boolean;
+  type: 'Addition' | 'Subtraction';
+  value: number | '';
 }
 
 const LeaveTypes: React.FC = () => {
@@ -23,6 +26,9 @@ const LeaveTypes: React.FC = () => {
     max_days_per_year: '',
     requires_approval: true,
     requires_document: false,
+    is_active: true,
+    type: 'Subtraction',
+    value: '',
   });
 
   useEffect(() => {
@@ -32,7 +38,7 @@ const LeaveTypes: React.FC = () => {
   const fetchLeaveTypes = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getLeaveTypes();
+      const data = await apiService.getLeaveTypes(true); // Include inactive leave types
       setLeaveTypes(data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -50,6 +56,9 @@ const LeaveTypes: React.FC = () => {
         max_days_per_year: formData.max_days_per_year === '' ? undefined : Number(formData.max_days_per_year),
         requires_approval: formData.requires_approval,
         requires_document: formData.requires_document,
+        is_active: formData.is_active,
+        type: formData.type,
+        value: formData.value === '' ? 0 : Number(formData.value),
       };
 
       if (editingId) {
@@ -72,6 +81,9 @@ const LeaveTypes: React.FC = () => {
       max_days_per_year: leaveType.max_days_per_year || '',
       requires_approval: leaveType.requires_approval,
       requires_document: leaveType.requires_document || false,
+      is_active: leaveType.is_active,
+      type: leaveType.type || 'Subtraction',
+      value: leaveType.value || '',
     });
     setEditingId(leaveType.id);
     setShowForm(true);
@@ -97,6 +109,9 @@ const LeaveTypes: React.FC = () => {
       max_days_per_year: '',
       requires_approval: true,
       requires_document: false,
+      is_active: true,
+      type: 'Subtraction',
+      value: '',
     });
     setEditingId(null);
     setShowForm(false);
@@ -178,6 +193,39 @@ const LeaveTypes: React.FC = () => {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type *
+                </label>
+                <select
+                  required
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'Addition' | 'Subtraction' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="Subtraction">Subtraction</option>
+                  <option value="Addition">Addition</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Value (Days) *
+                </label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  required
+                  value={formData.value}
+                  onChange={(e) => setFormData({ ...formData, value: e.target.value === '' ? '' : parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="e.g., 1, 0.5, 2.5"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description
@@ -210,6 +258,16 @@ const LeaveTypes: React.FC = () => {
                 />
                 <span className="ml-2 text-sm text-gray-700">Requires Document</span>
               </label>
+              
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Active</span>
+              </label>
             </div>
 
             <div className="flex justify-end space-x-3">
@@ -232,26 +290,32 @@ const LeaveTypes: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-white shadow rounded-lg overflow-hidden overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Description
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                 Max Days/Year
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Requires Approval
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Requires Document
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                Value
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                Approval
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                Document
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                Status
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                 Actions
               </th>
             </tr>
@@ -259,17 +323,28 @@ const LeaveTypes: React.FC = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {leaveTypes.map((leaveType) => (
               <tr key={leaveType.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {leaveType.name}
+                <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                  <div className="break-words leading-tight max-w-xs">
+                    {leaveType.name}
+                  </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  {leaveType.description || '-'}
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {leaveType.max_days_per_year || '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {leaveType.max_days_per_year}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    leaveType.type === 'Addition' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-orange-100 text-orange-800'
+                  }`}>
+                    {leaveType.type}
+                  </span>
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {leaveType.value}
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span className={`inline-flex px-1 py-1 text-xs font-semibold rounded-full ${
                     leaveType.requires_approval 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
@@ -277,8 +352,8 @@ const LeaveTypes: React.FC = () => {
                     {leaveType.requires_approval ? 'Yes' : 'No'}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span className={`inline-flex px-1 py-1 text-xs font-semibold rounded-full ${
                     leaveType.requires_document 
                       ? 'bg-blue-100 text-blue-800' 
                       : 'bg-gray-100 text-gray-800'
@@ -286,7 +361,16 @@ const LeaveTypes: React.FC = () => {
                     {leaveType.requires_document ? 'Yes' : 'No'}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span className={`inline-flex px-1 py-1 text-xs font-semibold rounded-full ${
+                    leaveType.is_active 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {leaveType.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium space-x-1">
                   <button
                     onClick={() => handleEdit(leaveType)}
                     className="text-primary-600 hover:text-primary-900"

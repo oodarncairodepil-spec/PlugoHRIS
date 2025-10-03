@@ -44,7 +44,7 @@ const EmployeeManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(12);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [showModal, setShowModal] = useState(false);
@@ -686,9 +686,9 @@ const EmployeeManagement: React.FC = () => {
                 }}
                 className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value={10}>10</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
+                <option value={12}>12</option>
+                <option value={48}>48</option>
+                <option value={128}>128</option>
               </select>
               <span className="text-sm text-gray-700">per page</span>
             </div>
@@ -928,6 +928,7 @@ const EmployeeManagement: React.FC = () => {
                       onChange={handleInputChange}
                       min="0"
                       max="365"
+                      step="0.01"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />

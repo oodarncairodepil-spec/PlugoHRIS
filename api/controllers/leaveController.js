@@ -385,7 +385,7 @@ const getLeaveTypes = async (req, res) => {
     try {
         const { data: leaveTypes, error } = await supabase_1.supabaseAdmin
             .from('leave_types')
-            .select('id, name, description, max_days_per_year, requires_approval')
+            .select('id, name, description, max_days_per_year, requires_approval, requires_document, type, value, created_at, updated_at')
             .order('name');
         if (error) {
             return res.status(500).json({ error: 'Failed to fetch leave types' });

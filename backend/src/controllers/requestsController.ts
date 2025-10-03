@@ -17,8 +17,10 @@ export const getMyAllRequests = async (req: AuthRequest, res: Response) => {
 
     let leaveRequests: any[] = [];
     let grabRequests: any[] = [];
+    let businessTripRequests: any[] = [];
     let totalLeaveCount = 0;
     let totalGrabCount = 0;
+    let totalBusinessTripCount = 0;
 
     // Fetch leave requests based on role
     if (!type || type === 'leave') {
@@ -91,13 +93,47 @@ export const getMyAllRequests = async (req: AuthRequest, res: Response) => {
       totalGrabCount = grabCount || 0;
     }
 
+    // Fetch business trip requests
+    if (!type || type === 'biztrip') {
+      let businessTripQuery = supabaseAdmin
+        .from('business_trip_requests')
+        .select(`
+          id, destination, start_date, end_date, status, created_at, approved_at, rejection_reason,
+          employee:employee_id(id, full_name, email, department_id, department:department_id(id, name)),
+          approved_by_user:approved_by(id, full_name),
+          events:business_trip_events(*),
+          participants:business_trip_participants(
+            employee:employee_id(id, full_name, email)
+          )
+        `, { count: 'exact' });
+
+      // For 'My Requests' page, show requests where user is the creator
+      // TODO: Later we can enhance this to include requests where user is a participant
+      businessTripQuery = businessTripQuery.eq('employee_id', userId);
+
+      if (status) {
+        businessTripQuery = businessTripQuery.eq('status', status);
+      }
+
+      const { data: businessTripData, error: businessTripError, count: businessTripCount } = await businessTripQuery
+        .order('created_at', { ascending: false });
+
+      if (businessTripError) {
+        console.error('Error fetching business trip requests:', businessTripError);
+        return res.status(500).json({ error: 'Failed to fetch business trip requests' });
+      }
+
+      businessTripRequests = (businessTripData || []).map(req => ({ ...req, request_type: 'biztrip' }));
+      totalBusinessTripCount = businessTripCount || 0;
+    }
+
     // Combine and sort all requests by created_at
-    const allRequests = [...leaveRequests, ...grabRequests]
+    const allRequests = [...leaveRequests, ...grabRequests, ...businessTripRequests]
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     // Apply pagination to combined results
     const paginatedRequests = allRequests.slice(offset, offset + Number(limit));
-    const totalCount = totalLeaveCount + totalGrabCount;
+    const totalCount = totalLeaveCount + totalGrabCount + totalBusinessTripCount;
 
     res.json({
       requests: paginatedRequests,
@@ -110,6 +146,7 @@ export const getMyAllRequests = async (req: AuthRequest, res: Response) => {
       summary: {
         total_leave_requests: totalLeaveCount,
         total_grab_requests: totalGrabCount,
+        total_business_trip_requests: totalBusinessTripCount,
         total_requests: totalCount
       }
     });

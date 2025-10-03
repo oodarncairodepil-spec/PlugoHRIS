@@ -17,9 +17,10 @@ import {
   ChevronRight,
   Calculator,
   Cog,
-  FileText
+  FileText,
+  ClipboardList
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
   children: ReactNode;
@@ -30,12 +31,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const getNavigationItems = () => {
     const baseItems = [
       { name: 'Dashboard', href: '/', icon: Home, current: location.pathname === '/' },
       { name: 'My Requests', href: '/my-requests', icon: Calendar, current: location.pathname === '/my-requests' },
       { name: 'Submit Request', href: '/leave-request', icon: Plus, current: location.pathname === '/leave-request' },
+      { name: 'My Surveys', href: '/employee-surveys', icon: ClipboardList, current: location.pathname === '/employee-surveys' },
     ];
 
     if (hasRole(['Manager', 'Admin'])) {
@@ -58,7 +61,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       { name: 'Departments', href: '/departments', icon: Building2, current: location.pathname === '/departments' },
       { name: 'Services', href: '/services', icon: Cog, current: location.pathname === '/services' },
       { name: 'Leave Types', href: '/leave-types', icon: FileText, current: location.pathname === '/leave-types' },
-      { name: 'Balance Checker', href: '/leave-balance-checker', icon: Calculator, current: location.pathname === '/leave-balance-checker' }
+      { name: 'Balance Checker', href: '/leave-balance-checker', icon: Calculator, current: location.pathname === '/leave-balance-checker' },
+      { name: 'Performance Appraisal', href: '/performance-appraisal', icon: ClipboardList, current: location.pathname === '/performance-appraisal' }
     ];
   };
 
@@ -160,9 +164,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center">
-              <div className="bg-gray-300 rounded-full p-2">
+              <button 
+                onClick={() => navigate('/profile')}
+                className="bg-gray-300 rounded-full p-2 hover:bg-gray-400 transition-colors cursor-pointer"
+                title="View Profile"
+              >
                 <User className="h-5 w-5 text-gray-600" />
-              </div>
+              </button>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-900">{user?.employee?.full_name || user?.email}</p>
                 <p className="text-xs text-gray-500">{user?.role}</p>
@@ -252,9 +260,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center">
-              <div className="bg-gray-300 rounded-full p-2">
+              <button 
+                onClick={() => navigate('/profile')}
+                className="bg-gray-300 rounded-full p-2 hover:bg-gray-400 transition-colors cursor-pointer"
+                title="View Profile"
+              >
                 <User className="h-5 w-5 text-gray-600" />
-              </div>
+              </button>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-900">{user?.employee?.full_name || user?.email}</p>
                 <p className="text-xs text-gray-500">{user?.role}</p>
@@ -292,9 +304,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex sm:items-center sm:space-x-2">
-                <div className="bg-gray-300 rounded-full p-1">
+                <button 
+                  onClick={() => navigate('/profile')}
+                  className="bg-gray-300 rounded-full p-1 hover:bg-gray-400 transition-colors cursor-pointer"
+                  title="View Profile"
+                >
                   <User className="h-4 w-4 text-gray-600" />
-                </div>
+                </button>
                 <span className="text-sm font-medium text-gray-900">{user?.employee?.full_name || user?.email}</span>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{user?.role}</span>
               </div>

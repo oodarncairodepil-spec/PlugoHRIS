@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Filter, User, MessageSquare, Car, Paperclip, FileText } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Filter, User, MessageSquare, Car, Paperclip, FileText, MapPin, X } from 'lucide-react';
 // import { useAuth } from '../contexts/AuthContext'; // Commented out - unused
 import { apiService } from '../services/api';
-import type { LeaveRequest, GrabCodeRequest } from '../types';
+import type { LeaveRequest, GrabCodeRequest, BusinessTripRequest } from '../types';
 
-type CombinedRequest = (LeaveRequest & { request_type: 'leave' }) | (GrabCodeRequest & { request_type: 'grab' });
+type CombinedRequest = (LeaveRequest & { request_type: 'leave' }) | (GrabCodeRequest & { request_type: 'grab' }) | (BusinessTripRequest & { request_type: 'biztrip' });
 
 const ApproveRequests: React.FC = () => {
   // const { user } = useAuth(); // Commented out unused variable
@@ -20,9 +20,11 @@ const ApproveRequests: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-  const [selectedRequestType, setSelectedRequestType] = useState<'leave' | 'grab' | null>(null);
+  const [selectedRequestType, setSelectedRequestType] = useState<'leave' | 'grab' | 'biztrip' | null>(null);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [approvalCodes, setApprovalCodes] = useState<string[]>([]);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedRequestForDetails, setSelectedRequestForDetails] = useState<CombinedRequest | null>(null);
 
   useEffect(() => {
     fetchRequests();
@@ -34,8 +36,8 @@ const ApproveRequests: React.FC = () => {
       
       const combinedRequests: CombinedRequest[] = [];
       
-      // Fetch leave requests if not filtered to grab only
-      if (requestTypeFilter !== 'grab') {
+      // Fetch leave requests if not filtered to grab or biztrip only
+      if (requestTypeFilter !== 'grab' && requestTypeFilter !== 'biztrip') {
         try {
           const leaveResponse = await apiService.getLeaveRequestsForApproval(
             currentPage,
@@ -52,8 +54,8 @@ const ApproveRequests: React.FC = () => {
         }
       }
       
-      // Fetch grab code requests if not filtered to leave only
-       if (requestTypeFilter !== 'leave') {
+      // Fetch grab code requests if not filtered to leave or biztrip only
+       if (requestTypeFilter !== 'leave' && requestTypeFilter !== 'biztrip') {
          try {
            // Pass status filter to API, default to 'Pending' if no filter is set
            const grabResponse = await apiService.getAllGrabCodeRequests(1, 100, statusFilter || 'Pending');
@@ -65,6 +67,24 @@ const ApproveRequests: React.FC = () => {
            combinedRequests.push(...filteredGrabRequests);
          } catch (err) {
            console.warn('Failed to fetch grab code requests:', err);
+         }
+       }
+       
+       // Fetch business trip requests if not filtered to leave or grab only
+       if (requestTypeFilter !== 'leave' && requestTypeFilter !== 'grab') {
+         try {
+           const biztripResponse = await apiService.getBusinessTripRequestsForApproval(
+             currentPage,
+             10,
+             statusFilter || undefined
+           );
+           const biztripRequests = biztripResponse.business_trip_requests.map(req => ({
+             ...req,
+             request_type: 'biztrip' as const
+           }));
+           combinedRequests.push(...biztripRequests);
+         } catch (err) {
+           console.warn('Failed to fetch business trip requests:', err);
          }
        }
       
@@ -91,6 +111,16 @@ const ApproveRequests: React.FC = () => {
       const grabRequest = request as GrabCodeRequest & { request_type: 'grab' };
       const initialCodes = Array(grabRequest.code_needed).fill('');
       setApprovalCodes(initialCodes);
+    } else if (request?.request_type === 'biztrip') {
+      try {
+        setProcessingId(requestId);
+        await apiService.approveBusinessTripRequest(requestId);
+        await fetchRequests(); // Refresh the list
+      } catch (err: any) {
+        setError(err.message || 'Failed to approve business trip request');
+      } finally {
+        setProcessingId(null);
+      }
     } else {
       try {
         setProcessingId(requestId);
@@ -145,6 +175,8 @@ const ApproveRequests: React.FC = () => {
       setProcessingId(selectedRequestId);
       if (request?.request_type === 'grab') {
         await apiService.rejectGrabCodeRequest(selectedRequestId, rejectionReason);
+      } else if (request?.request_type === 'biztrip') {
+        await apiService.rejectBusinessTripRequest(selectedRequestId, rejectionReason);
       } else {
         await apiService.rejectLeaveRequest(selectedRequestId, rejectionReason);
       }
@@ -183,6 +215,16 @@ const ApproveRequests: React.FC = () => {
     setSelectedRequestType(null);
     setApprovalCodes([]);
     setError('');
+  };
+
+  const openDetailsModal = (request: CombinedRequest) => {
+    setSelectedRequestForDetails(request);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedRequestForDetails(null);
   };
 
 
@@ -266,6 +308,7 @@ const ApproveRequests: React.FC = () => {
                   <option value="">All Requests</option>
                   <option value="leave">Leave Requests</option>
                   <option value="grab">Grab Code Requests</option>
+                  <option value="biztrip">Business Trip Requests</option>
                 </select>
               </div>
               <div className="relative">
@@ -311,14 +354,22 @@ const ApproveRequests: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {requests.map((request) => (
-                <div key={request.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div 
+                  key={request.id} 
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => openDetailsModal(request)}
+                >
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
-                        {request.request_type === 'leave' ? getStatusIcon(request.status) : <Car className="h-5 w-5 text-blue-500" />}
+                        {request.request_type === 'leave' ? getStatusIcon(request.status) : 
+                         request.request_type === 'biztrip' ? <MapPin className="h-5 w-5 text-green-500" /> :
+                         <Car className="h-5 w-5 text-blue-500" />}
                         <h3 className="ml-2 text-lg font-medium text-gray-900">
                           {request.request_type === 'leave' 
                             ? (typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Unknown Leave Type')
+                            : request.request_type === 'biztrip'
+                            ? `Business Trip to ${request.destination}`
                             : 'Grab Code Request'
                           }
                         </h3>
@@ -377,6 +428,33 @@ const ApproveRequests: React.FC = () => {
                             </div>
                           )}
                         </>
+                      ) : request.request_type === 'biztrip' ? (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600 mb-2">
+                            <div className="flex items-center">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              <span>{formatDate(request.start_date)} - {formatDate(request.end_date)}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <MapPin className="h-4 w-4 mr-1" />
+                              <span>{request.destination}</span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Submitted: {formatDate(request.created_at)}
+                            </div>
+                          </div>
+                          
+                          <div className="mb-3">
+                            <p className="text-sm text-gray-700">
+                              <span className="font-medium">Events:</span> {request.events?.length || 0} event(s)
+                            </p>
+                            {request.participants && request.participants.length > 0 && (
+                              <p className="text-sm text-gray-700 mt-2">
+                                <span className="font-medium">Participants:</span> {request.participants.length} participant(s)
+                              </p>
+                            )}
+                          </div>
+                        </>
                       ) : (
                         <>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600 mb-2">
@@ -419,7 +497,7 @@ const ApproveRequests: React.FC = () => {
                     
                     {/* Action Buttons */}
                     {request.status === 'Pending' && (
-                      <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-4">
+                      <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-4" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => handleApprove(request.id)}
                           disabled={processingId === request.id}
@@ -535,12 +613,12 @@ const ApproveRequests: React.FC = () => {
             <div className="flex items-center mb-4">
               <MessageSquare className="h-6 w-6 text-red-600 mr-2" />
               <h3 className="text-lg font-medium text-gray-900">
-                Reject {selectedRequestType === 'grab' ? 'Grab Code' : 'Leave'} Request
+                Reject {selectedRequestType === 'grab' ? 'Grab Code' : selectedRequestType === 'biztrip' ? 'Business Trip' : 'Leave'} Request
               </h3>
             </div>
             
             <p className="text-sm text-gray-600 mb-4">
-              Please provide a reason for rejecting this {selectedRequestType === 'grab' ? 'grab code' : 'leave'} request:
+              Please provide a reason for rejecting this {selectedRequestType === 'grab' ? 'grab code' : selectedRequestType === 'biztrip' ? 'business trip' : 'leave'} request:
             </p>
             
             <textarea
@@ -570,6 +648,272 @@ const ApproveRequests: React.FC = () => {
                 )}
                 Reject Request
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Details Modal */}
+      {showDetailsModal && selectedRequestForDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {selectedRequestForDetails.request_type === 'leave' ? getStatusIcon(selectedRequestForDetails.status) : 
+                   selectedRequestForDetails.request_type === 'biztrip' ? <MapPin className="h-6 w-6 text-green-500" /> :
+                   <Car className="h-6 w-6 text-blue-500" />}
+                  <h3 className="ml-2 text-xl font-semibold text-gray-900">
+                    {selectedRequestForDetails.request_type === 'leave' 
+                      ? (typeof selectedRequestForDetails.leave_type === 'string' ? selectedRequestForDetails.leave_type : selectedRequestForDetails.leave_type?.name || 'Unknown Leave Type')
+                      : selectedRequestForDetails.request_type === 'biztrip'
+                      ? `Business Trip to ${selectedRequestForDetails.destination}`
+                      : 'Grab Code Request'
+                    } - Details
+                  </h3>
+                </div>
+                <button
+                  onClick={closeDetailsModal}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Employee Information */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="text-lg font-medium text-gray-900 mb-3">Employee Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-medium text-gray-700">Name:</span>
+                    <p className="text-gray-600">{selectedRequestForDetails.employee?.full_name || 'Unknown Employee'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Department:</span>
+                    <p className="text-gray-600">{selectedRequestForDetails.employee?.department?.name || 'Unknown Department'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Email:</span>
+                    <p className="text-gray-600">{selectedRequestForDetails.employee?.email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Status:</span>
+                    <span className={`ml-2 ${getStatusBadge(selectedRequestForDetails.status)}`}>
+                      {selectedRequestForDetails.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Request Details */}
+              <div className="mb-6">
+                <h4 className="text-lg font-medium text-gray-900 mb-3">Request Details</h4>
+                
+                {selectedRequestForDetails.request_type === 'leave' ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="font-medium text-gray-700">Leave Type:</span>
+                        <p className="text-gray-600">
+                          {typeof selectedRequestForDetails.leave_type === 'string' 
+                            ? selectedRequestForDetails.leave_type 
+                            : selectedRequestForDetails.leave_type?.name || 'Unknown Leave Type'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Duration:</span>
+                        <p className="text-gray-600">{selectedRequestForDetails.total_days} days</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Start Date:</span>
+                        <p className="text-gray-600">{formatDate(selectedRequestForDetails.start_date)}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">End Date:</span>
+                        <p className="text-gray-600">{formatDate(selectedRequestForDetails.end_date)}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Reason:</span>
+                      <p className="text-gray-600 mt-1">{selectedRequestForDetails.reason}</p>
+                    </div>
+                    
+                    {selectedRequestForDetails.document_links && selectedRequestForDetails.document_links.length > 0 && (
+                      <div>
+                        <span className="font-medium text-gray-700">Documents:</span>
+                        <div className="mt-2 space-y-2">
+                          {selectedRequestForDetails.document_links.map((link, index) => (
+                            <a
+                              key={index}
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              <Paperclip className="h-4 w-4 mr-1" />
+                              Document {index + 1}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : selectedRequestForDetails.request_type === 'biztrip' ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="font-medium text-gray-700">Destination:</span>
+                        <p className="text-gray-600">{selectedRequestForDetails.destination}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Duration:</span>
+                        <p className="text-gray-600">
+                          {formatDate(selectedRequestForDetails.start_date)} - {formatDate(selectedRequestForDetails.end_date)}
+                          {(() => {
+                            const start = new Date(selectedRequestForDetails.start_date);
+                            const end = new Date(selectedRequestForDetails.end_date);
+                            const diffTime = Math.abs(end.getTime() - start.getTime());
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                            return ` (${diffDays} days)`;
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {selectedRequestForDetails.events && selectedRequestForDetails.events.length > 0 && (
+                      <div>
+                        <span className="font-medium text-gray-700">Events:</span>
+                        <div className="mt-2 overflow-x-auto">
+                          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Event Name</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Date & Time</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Meeting Location</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Agenda</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                              {selectedRequestForDetails.events.map((event, index) => (
+                                <tr key={index} className="hover:bg-gray-50">
+                                  <td className="px-4 py-2 text-sm font-medium text-gray-900">{event.event_name}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-600">
+                                    {(() => {
+                                      const dateRange = event.event_date || '';
+                                      const timeRange = event.event_time || '';
+                                      
+                                      // Check if time range has actual times (not just ' - ' or empty)
+                                      const hasValidTime = timeRange.trim() && timeRange.trim() !== '-' && !timeRange.match(/^\s*-\s*$/);
+                                      
+                                      if (hasValidTime) {
+                                        // Parse the date range and time range to format properly
+                                        const dates = dateRange.split(' to ');
+                                        const times = timeRange.split(' - ');
+                                        
+                                        if (dates.length === 2 && times.length === 2) {
+                                          const startDate = dates[0].trim();
+                                          const endDate = dates[1].trim();
+                                          const startTime = times[0].trim();
+                                          const endTime = times[1].trim();
+                                          
+                                          if (startTime && endTime) {
+                                            return `${startDate} at ${startTime} to ${endDate} at ${endTime}`;
+                                          }
+                                        }
+                                      }
+                                      
+                                      // Return just the date range if no valid time
+                                      return dateRange;
+                                    })()} 
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-gray-600">{event.meeting_location || '-'}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-600">{event.agenda || '-'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedRequestForDetails.participants && selectedRequestForDetails.participants.length > 0 && (
+                      <div>
+                        <span className="font-medium text-gray-700">Participants:</span>
+                        <div className="mt-2 space-y-1">
+                          {selectedRequestForDetails.participants.map((participant, index) => (
+                            <div key={index} className="flex items-center p-2 bg-gray-50 rounded">
+                              <User className="h-4 w-4 mr-2 text-gray-500" />
+                              <span className="text-gray-700">
+                                {participant.employee?.full_name || 'Unknown Employee'}
+                              </span>
+                              {participant.employee?.email && (
+                                <span className="text-sm text-gray-500 ml-2">({participant.employee.email})</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="font-medium text-gray-700">Usage Date:</span>
+                        <p className="text-gray-600">{formatDate(selectedRequestForDetails.usage_time)}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Codes Needed:</span>
+                        <p className="text-gray-600">{selectedRequestForDetails.code_needed}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Purpose:</span>
+                      <p className="text-gray-600 mt-1">{selectedRequestForDetails.purpose}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Meeting Location:</span>
+                      <p className="text-gray-600 mt-1">{selectedRequestForDetails.meeting_location}</p>
+                    </div>
+                    
+                    {selectedRequestForDetails.status === 'Approved' && selectedRequestForDetails.approved_codes && selectedRequestForDetails.approved_codes.length > 0 && (
+                      <div>
+                        <span className="font-medium text-gray-700">Approved Codes:</span>
+                        <div className="mt-2 space-y-1">
+                          {selectedRequestForDetails.approved_codes.map((code, index) => (
+                            <p key={index} className="text-gray-600 font-mono bg-gray-50 p-2 rounded">{code}</p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Submission Information */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="text-lg font-medium text-gray-900 mb-3">Submission Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-medium text-gray-700">Submitted On:</span>
+                    <p className="text-gray-600">{formatDate(selectedRequestForDetails.created_at)}</p>
+                  </div>
+                  {selectedRequestForDetails.status === 'Approved' && selectedRequestForDetails.approved_at && (
+                    <div>
+                      <span className="font-medium text-gray-700">Approved On:</span>
+                      <p className="text-gray-600">{formatDate(selectedRequestForDetails.approved_at)}</p>
+                    </div>
+                  )}
+                  {selectedRequestForDetails.status === 'Rejected' && selectedRequestForDetails.rejection_reason && (
+                    <div className="col-span-2">
+                      <span className="font-medium text-gray-700">Rejection Reason:</span>
+                      <p className="text-red-600 mt-1">{selectedRequestForDetails.rejection_reason}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

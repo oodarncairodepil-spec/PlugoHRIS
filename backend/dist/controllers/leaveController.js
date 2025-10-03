@@ -383,11 +383,17 @@ const getAllLeaveRequestsForDashboard = async (req, res) => {
 exports.getAllLeaveRequestsForDashboard = getAllLeaveRequestsForDashboard;
 const getLeaveTypes = async (req, res) => {
     try {
-        const { data: leaveTypes, error } = await supabase_1.supabaseAdmin
+        const { include_inactive } = req.query;
+        let query = supabase_1.supabaseAdmin
             .from('leave_types')
-            .select('id, name, description, max_days_per_year, requires_approval')
-            .order('name');
+            .select('id, name, description, max_days_per_year, requires_approval, requires_document, is_active, type, value, created_at');
+        // Only filter by active status if include_inactive is not set to 'true'
+        if (include_inactive !== 'true') {
+            query = query.eq('is_active', true);
+        }
+        const { data: leaveTypes, error } = await query.order('name');
         if (error) {
+            console.error('Database error in getLeaveTypes:', error);
             return res.status(500).json({ error: 'Failed to fetch leave types' });
         }
         res.json({ leave_types: leaveTypes });
@@ -404,9 +410,15 @@ const createLeaveType = async (req, res) => {
         if (req.user.role !== 'Admin') {
             return res.status(403).json({ error: 'Access denied. Admin role required.' });
         }
-        const { name, description, max_days_per_year, requires_approval, requires_document } = req.body;
+        const { name, description, max_days_per_year, requires_approval, requires_document, is_active, type, value } = req.body;
         if (!name || !description) {
             return res.status(400).json({ error: 'Name and description are required' });
+        }
+        if (!type || !['Addition', 'Subtraction'].includes(type)) {
+            return res.status(400).json({ error: 'Type must be either "Addition" or "Subtraction"' });
+        }
+        if (value === undefined || value === null || isNaN(parseFloat(value)) || parseFloat(value) < 0) {
+            return res.status(400).json({ error: 'Value must be a positive number (supports decimals like 0.5)' });
         }
         const { data: leaveType, error } = await supabase_1.supabaseAdmin
             .from('leave_types')
@@ -415,7 +427,10 @@ const createLeaveType = async (req, res) => {
             description: description.trim(),
             max_days_per_year: max_days_per_year || null,
             requires_approval: requires_approval !== false,
-            requires_document: requires_document === true
+            requires_document: requires_document === true,
+            is_active: is_active !== false,
+            type: type,
+            value: parseFloat(value)
         })
             .select()
             .single();
@@ -440,9 +455,15 @@ const updateLeaveType = async (req, res) => {
             return res.status(403).json({ error: 'Access denied. Admin role required.' });
         }
         const { id } = req.params;
-        const { name, description, max_days_per_year, requires_approval, requires_document } = req.body;
+        const { name, description, max_days_per_year, requires_approval, requires_document, is_active, type, value } = req.body;
         if (!name || !description) {
             return res.status(400).json({ error: 'Name and description are required' });
+        }
+        if (!type || !['Addition', 'Subtraction'].includes(type)) {
+            return res.status(400).json({ error: 'Type must be either "Addition" or "Subtraction"' });
+        }
+        if (value === undefined || value === null || isNaN(parseFloat(value)) || parseFloat(value) < 0) {
+            return res.status(400).json({ error: 'Value must be a positive number (supports decimals like 0.5)' });
         }
         const { data: leaveType, error } = await supabase_1.supabaseAdmin
             .from('leave_types')
@@ -451,7 +472,10 @@ const updateLeaveType = async (req, res) => {
             description: description.trim(),
             max_days_per_year: max_days_per_year || null,
             requires_approval: requires_approval !== false,
-            requires_document: requires_document === true
+            requires_document: requires_document === true,
+            is_active: is_active !== false,
+            type: type,
+            value: parseFloat(value)
         })
             .eq('id', id)
             .select()

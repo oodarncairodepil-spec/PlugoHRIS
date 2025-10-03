@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, FileText, Car, Filter, Copy, Paperclip } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, FileText, Car, Filter, Copy, Paperclip, MapPin, X } from 'lucide-react';
 import { apiService } from '../services/api';
 
 const MyRequests: React.FC = () => {
@@ -7,11 +7,11 @@ const MyRequests: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [typeFilter, setTypeFilter] = useState<'leave' | 'grab' | ''>('');
+  const [typeFilter, setTypeFilter] = useState<'leave' | 'grab' | 'biztrip' | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [summary, setSummary] = useState({ total_leave_requests: 0, total_grab_requests: 0, total_requests: 0 });
+  const [summary, setSummary] = useState({ total_leave_requests: 0, total_grab_requests: 0, total_business_trip_requests: 0, total_requests: 0 });
 
   useEffect(() => {
     fetchRequests();
@@ -79,19 +79,49 @@ const MyRequests: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleTypeFilterChange = (type: 'leave' | 'grab' | '') => {
+  const handleTypeFilterChange = (type: 'leave' | 'grab' | 'biztrip' | '') => {
     setTypeFilter(type);
     setCurrentPage(1);
   };
 
+  const handleCancelRequest = async (requestId: number) => {
+    if (!window.confirm('Are you sure you want to cancel this business trip request?')) {
+      return;
+    }
+
+    try {
+      await apiService.cancelBusinessTripRequest(requestId.toString());
+      // Refresh the requests list
+      fetchRequests();
+    } catch (err: any) {
+      setError(err.message || 'Failed to cancel request');
+    }
+  };
+
   const getRequestIcon = (requestType: string) => {
-    return requestType === 'leave' ? 
-      <FileText className="h-5 w-5 text-blue-500" /> : 
-      <Car className="h-5 w-5 text-purple-500" />;
+    switch (requestType) {
+      case 'leave':
+        return <FileText className="h-5 w-5 text-blue-500" />;
+      case 'grab':
+        return <Car className="h-5 w-5 text-purple-500" />;
+      case 'biztrip':
+        return <MapPin className="h-5 w-5 text-green-500" />;
+      default:
+        return <FileText className="h-5 w-5 text-gray-500" />;
+    }
   };
 
   const getRequestTypeLabel = (requestType: string) => {
-    return requestType === 'leave' ? 'Leave Request' : 'Grab Code Request';
+    switch (requestType) {
+      case 'leave':
+        return 'Leave Request';
+      case 'grab':
+        return 'Grab Code Request';
+      case 'biztrip':
+        return 'Business Trip Request';
+      default:
+        return 'Request';
+    }
   };
 
   if (loading && requests.length === 0) {
@@ -125,6 +155,7 @@ const MyRequests: React.FC = () => {
                   <option value="">All Types</option>
                   <option value="leave">Leave Requests</option>
                   <option value="grab">Grab Requests</option>
+                  <option value="biztrip">Business Trip Requests</option>
                 </select>
               </div>
               <div className="relative">
@@ -156,6 +187,10 @@ const MyRequests: React.FC = () => {
             <div className="bg-purple-50 p-3 rounded-lg">
               <div className="text-purple-600 font-medium">Grab Requests</div>
               <div className="text-2xl font-bold text-purple-800">{summary.total_grab_requests}</div>
+            </div>
+            <div className="bg-green-50 p-3 rounded-lg">
+              <div className="text-green-600 font-medium">Business Trip Requests</div>
+              <div className="text-2xl font-bold text-green-800">{summary.total_business_trip_requests}</div>
             </div>
           </div>
           <div className="mt-2 text-sm text-gray-600">
@@ -190,18 +225,32 @@ const MyRequests: React.FC = () => {
                 <div key={`${request.request_type}-${request.id}`} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center mb-2">
-                        {getRequestIcon(request.request_type)}
-                        {getStatusIcon(request.status)}
-                        <h3 className="ml-2 text-lg font-medium text-gray-900">
-                          {request.request_type === 'leave' ? 
-                            (typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Leave Request') :
-                            `${request.service_needed} - ${getRequestTypeLabel(request.request_type)}`
-                          }
-                        </h3>
-                        <span className={`ml-3 ${getStatusBadge(request.status)}`}>
-                          {request.status}
-                        </span>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          {getRequestIcon(request.request_type)}
+                          {getStatusIcon(request.status)}
+                          <h3 className="ml-2 text-lg font-medium text-gray-900">
+                            {request.request_type === 'leave' ? 
+                              (typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Leave Request') :
+                              request.request_type === 'biztrip' ?
+                              `${request.destination} - ${getRequestTypeLabel(request.request_type)}` :
+                              `${request.service_needed} - ${getRequestTypeLabel(request.request_type)}`
+                            }
+                          </h3>
+                          <span className={`ml-3 ${getStatusBadge(request.status)}`}>
+                            {request.status}
+                          </span>
+                        </div>
+                        {request.request_type === 'biztrip' && request.status === 'Pending' && (
+                          <button
+                            onClick={() => handleCancelRequest(request.id)}
+                            className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:text-red-700 transition-colors"
+                            title="Cancel Request"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Cancel
+                          </button>
+                        )}
                       </div>
                       
                       {request.request_type === 'leave' ? (
@@ -223,6 +272,27 @@ const MyRequests: React.FC = () => {
                             <span className="font-medium text-gray-700">Approval Manager:</span>
                             <br />
                             <span className="text-gray-600">{request.approved_by_user?.full_name || 'Not assigned'}</span>
+                          </div>
+                        </div>
+                      ) : request.request_type === 'biztrip' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            <span>{formatDate(request.start_date)} - {formatDate(request.end_date)}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            <span>{request.destination}</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium text-gray-700">Requester:</span>
+                            <br />
+                            <span className="text-gray-600">{request.employee?.full_name || 'Unknown'}</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium text-gray-700">Events:</span>
+                            <br />
+                            <span className="text-gray-600">{request.events?.length || 0} event(s)</span>
                           </div>
                         </div>
                       ) : (

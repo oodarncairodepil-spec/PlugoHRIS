@@ -44,6 +44,8 @@ import leaveBalanceRoutes from './routes/leaveBalance';
 import grabCodeRoutes from './routes/grabCodeRoutes';
 import servicesRoutes from './routes/services';
 import requestsRoutes from './routes/requests';
+import businessTripRoutes from './routes/businessTrip';
+import performanceAppraisalRoutes from './routes/performanceAppraisal';
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -54,6 +56,8 @@ app.use('/api/leave-balance', leaveBalanceRoutes);
 app.use('/api/grab-code-requests', grabCodeRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/requests', requestsRoutes);
+app.use('/api/business-trips', businessTripRoutes);
+app.use('/api/performance-appraisal', performanceAppraisalRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

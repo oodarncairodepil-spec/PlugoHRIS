@@ -35,6 +35,9 @@ export interface LeaveType {
   max_days_per_year?: number;
   requires_approval: boolean;
   requires_document?: boolean;
+  is_active: boolean;
+  type: 'Addition' | 'Subtraction';
+  value: number;
   created_at: string;
   updated_at: string;
 }
@@ -108,6 +111,43 @@ export interface CreateGrabCodeRequestData {
   usage_time: string;
   meeting_location: string;
   code_needed: number;
+}
+
+export interface BusinessTripEvent {
+  id: string;
+  business_trip_request_id: string;
+  event_name: string;
+  agenda: string;
+  event_date: string;
+  event_time: string;
+  meeting_location: string;
+  created_at: string;
+}
+
+export interface BusinessTripParticipant {
+  id: string;
+  business_trip_request_id: string;
+  employee_id: string;
+  employee?: Employee;
+  created_at: string;
+}
+
+export interface BusinessTripRequest {
+  id: string;
+  employee_id: string;
+  employee?: Employee;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  approved_by?: string;
+  approved_by_user?: Employee;
+  approved_at?: string;
+  rejection_reason?: string;
+  created_at: string;
+  updated_at?: string;
+  events?: BusinessTripEvent[];
+  participants?: BusinessTripParticipant[];
 }
 
 export interface DepartmentEmployee {

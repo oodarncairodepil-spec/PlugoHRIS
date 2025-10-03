@@ -12,6 +12,7 @@ interface LeaveBalanceData {
   employment_type: 'Permanent' | 'Contract';
   total_balance: number;
   total_balance_used: number;
+  total_added: number;
   current_leave_balance: number;
 }
 
@@ -162,6 +163,9 @@ const LeaveBalanceChecker: React.FC = () => {
                   Total Used
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Added
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Current Balance
                 </th>
               </tr>
@@ -195,6 +199,11 @@ const LeaveBalanceChecker: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {employee.total_balance_used.toFixed(2)} days
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span className="text-gray-500 font-semibold">
+                      {employee.total_added.toFixed(2)} days
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span className={`font-semibold ${

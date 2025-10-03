@@ -62,7 +62,7 @@ const DepartmentManagement: React.FC = () => {
 
   const fetchEmployees = useCallback(async () => {
     try {
-      const response = await apiService.get('/employees?limit=1000');
+      const response = await apiService.get('/employees?limit=1000&status=Active');
       if (response.data) {
         setEmployees(response.data.employees || []);
       }

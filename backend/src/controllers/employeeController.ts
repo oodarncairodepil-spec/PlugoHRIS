@@ -223,7 +223,7 @@ export const getAllEmployees = async (req: AuthRequest, res: Response) => {
     console.log('User role:', req.user?.role);
     
     const { data: employees, error, count } = await query
-      .order('start_date', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(offset, offset + Number(limit) - 1);
 
     if (error) {

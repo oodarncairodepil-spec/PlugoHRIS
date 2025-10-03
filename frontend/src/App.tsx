@@ -5,13 +5,16 @@ import Layout from './components/Layout';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import LeaveRequest from './components/LeaveRequest';
-import MyRequests from './components/MyRequests';
+import MyRequests from './components/myrequests';
 import ApproveRequests from './components/ApproveRequests';
 import EmployeeManagement from './components/EmployeeManagement';
 import DepartmentManagement from './components/DepartmentManagement';
 import LeaveBalanceChecker from './components/LeaveBalanceChecker';
 import Services from './components/Services';
 import LeaveTypes from './components/LeaveTypes';
+import EmployeeProfile from './components/EmployeeProfile';
+import PerformanceAppraisal from './components/PerformanceAppraisal';
+import EmployeeSurveys from './components/EmployeeSurveys';
 import AdminRoute from './components/AdminRoute';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -54,6 +57,9 @@ function App() {
                     <Route path="/leave-balance-checker" element={<AdminRoute><LeaveBalanceChecker /></AdminRoute>} />
                     <Route path="/services" element={<AdminRoute><Services /></AdminRoute>} />
                     <Route path="/leave-types" element={<AdminRoute><LeaveTypes /></AdminRoute>} />
+                    <Route path="/performance-appraisal" element={<AdminRoute><PerformanceAppraisal /></AdminRoute>} />
+                    <Route path="/employee-surveys" element={<EmployeeSurveys />} />
+                    <Route path="/profile" element={<EmployeeProfile />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

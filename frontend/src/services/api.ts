@@ -126,8 +126,8 @@ class ApiService {
   }
 
   async getEmployee(id: string): Promise<Employee> {
-    const response: AxiosResponse<Employee> = await this.api.get(`/employees/${id}`);
-    return response.data;
+    const response: AxiosResponse<{ employee: Employee }> = await this.api.get(`/employees/${id}`);
+    return response.data.employee;
   }
 
   async createEmployee(employee: Omit<Employee, 'id' | 'created_at' | 'updated_at'>): Promise<{ employee: Employee; temporary_password: string }> {
@@ -197,17 +197,18 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
     return response.data;
   }
 
-  async getLeaveTypes(): Promise<LeaveType[]> {
-    const response: AxiosResponse<{ leave_types: LeaveType[] }> = await this.api.get('/leaves/types');
+  async getLeaveTypes(includeInactive = false): Promise<LeaveType[]> {
+    const url = includeInactive ? '/leaves/types?include_inactive=true' : '/leaves/types';
+    const response: AxiosResponse<{ leave_types: LeaveType[] }> = await this.api.get(url);
     return response.data.leave_types;
   }
 
-  async createLeaveType(leaveType: { name: string; description: string; max_days_per_year?: number; requires_approval?: boolean }): Promise<LeaveType> {
+  async createLeaveType(leaveType: { name: string; description: string; max_days_per_year?: number; requires_approval?: boolean; type: string; value: number }): Promise<LeaveType> {
     const response: AxiosResponse<{ leave_type: LeaveType }> = await this.api.post('/leaves/types', leaveType);
     return response.data.leave_type;
   }
 
-  async updateLeaveType(id: string, leaveType: { name: string; description: string; max_days_per_year?: number; requires_approval?: boolean }): Promise<LeaveType> {
+  async updateLeaveType(id: string, leaveType: { name: string; description: string; max_days_per_year?: number; requires_approval?: boolean; type: string; value: number }): Promise<LeaveType> {
     const response: AxiosResponse<{ leave_type: LeaveType }> = await this.api.put(`/leaves/types/${id}`, leaveType);
     return response.data.leave_type;
   }
@@ -263,15 +264,76 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
   }
 
   async getGrabCodeRequestById(id: string): Promise<GrabCodeRequest> {
-    const response = await this.api.get(`/grab-code-requests/${id}`);
+    const response = await this.api.get(`/grab-codes/${id}`);
+    return response.data;
+  }
+
+  // Business Trip Request methods
+  async createBusinessTripRequest(request: {
+    destination: string;
+    start_date: string;
+    end_date: string;
+    events: Array<{
+      event_name: string;
+      start_date: string;
+      end_date: string;
+      start_time: string;
+      end_time: string;
+      location: string;
+      agenda: string;
+    }>;
+    participants: Array<{ employee_id: string }>;
+  }): Promise<any> {
+    const response = await this.api.post('/business-trips', request);
+    return response.data;
+  }
+
+  async getMyBusinessTripRequests(page = 1, limit = 10, status?: string): Promise<{
+    business_trip_requests: any[];
+    pagination: { total: number; page: number; pages: number; limit: number };
+  }> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(status && { status })
+    });
+    const response = await this.api.get(`/business-trips/my-requests?${params}`);
+    return response.data;
+  }
+
+  async getBusinessTripRequestsForApproval(page = 1, limit = 10, status?: string): Promise<{
+    business_trip_requests: any[];
+    pagination: { total: number; page: number; pages: number; limit: number };
+  }> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(status && { status })
+    });
+    const response = await this.api.get(`/business-trips/for-approval?${params}`);
+    return response.data;
+  }
+
+  async approveBusinessTripRequest(id: string): Promise<any> {
+    const response = await this.api.put(`/business-trips/${id}/approve`);
+    return response.data;
+  }
+
+  async rejectBusinessTripRequest(id: string, reason: string): Promise<any> {
+    const response = await this.api.put(`/business-trips/${id}/reject`, { rejection_reason: reason });
+    return response.data;
+  }
+
+  async cancelBusinessTripRequest(id: string): Promise<any> {
+    const response = await this.api.put(`/business-trips/${id}/cancel`);
     return response.data;
   }
 
   // Unified requests endpoint
-  async getMyAllRequests(page = 1, limit = 10, status?: string, type?: 'leave' | 'grab'): Promise<{
+  async getMyAllRequests(page = 1, limit = 10, status?: string, type?: 'leave' | 'grab' | 'biztrip'): Promise<{
     requests: any[];
     pagination: { total: number; page: number; pages: number; limit: number };
-    summary: { total_leave_requests: number; total_grab_requests: number; total_requests: number };
+    summary: { total_leave_requests: number; total_grab_requests: number; total_business_trip_requests: number; total_requests: number };
   }> {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -300,6 +362,15 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
       limit: limit.toString()
     });
     const response = await this.api.get(`/grab-code-requests/dashboard/all?${params}`);
+    return response.data;
+  }
+
+  async getAllBusinessTripRequestsForDashboard(page = 1, limit = 100): Promise<{ business_trip_requests: any[]; pagination: { total: number; page: number; pages: number; limit: number } }> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    });
+    const response = await this.api.get(`/business-trips/dashboard/all?${params}`);
     return response.data;
   }
 

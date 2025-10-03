@@ -40,17 +40,19 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       
       // Admin can see ALL data from ALL employees with ALL statuses
-      const [leaveRequestsData, grabCodeRequestsData, employeesData] = await Promise.all([
+      const [leaveRequestsData, grabCodeRequestsData, businessTripRequestsData, employeesData] = await Promise.all([
         apiService.getAllLeaveRequestsForDashboard(),
         apiService.getAllGrabCodeRequestsForDashboard(),
+        apiService.getAllBusinessTripRequestsForDashboard(),
         apiService.getEmployees(1, 1000, undefined, { status: 'Active' })
       ]);
       
       const allLeaveRequests = leaveRequestsData.leave_requests || [];
       const allGrabRequests = grabCodeRequestsData.grab_code_requests || [];
-      const totalRequests = allLeaveRequests.length + allGrabRequests.length;
+      const allBusinessTripRequests = businessTripRequestsData.business_trip_requests || [];
+      const totalRequests = allLeaveRequests.length + allGrabRequests.length + allBusinessTripRequests.length;
       
-      // Calculate stats from ALL requests (leave + grab code)
+      // Calculate stats from ALL requests (leave + grab code + business trip)
       const pendingLeave = allLeaveRequests.filter((r: LeaveRequest) => r.status === 'Pending').length;
       const approvedLeave = allLeaveRequests.filter((r: LeaveRequest) => r.status === 'Approved').length;
       const rejectedLeave = allLeaveRequests.filter((r: LeaveRequest) => r.status === 'Rejected').length;
@@ -59,18 +61,23 @@ const Dashboard: React.FC = () => {
       const approvedGrab = allGrabRequests.filter((r: any) => r.status === 'Approved').length;
       const rejectedGrab = allGrabRequests.filter((r: any) => r.status === 'Rejected').length;
       
+      const pendingBiztrip = allBusinessTripRequests.filter((r: any) => r.status === 'Pending').length;
+      const approvedBiztrip = allBusinessTripRequests.filter((r: any) => r.status === 'Approved').length;
+      const rejectedBiztrip = allBusinessTripRequests.filter((r: any) => r.status === 'Rejected').length;
+      
       setStats({
         totalRequests,
-        pendingRequests: pendingLeave + pendingGrab,
-        approvedRequests: approvedLeave + approvedGrab,
-        rejectedRequests: rejectedLeave + rejectedGrab,
+        pendingRequests: pendingLeave + pendingGrab + pendingBiztrip,
+        approvedRequests: approvedLeave + approvedGrab + approvedBiztrip,
+        rejectedRequests: rejectedLeave + rejectedGrab + rejectedBiztrip,
         totalEmployees: employeesData.total || 0
       });
       
-      // Show recent requests from both leave and grab code requests
+      // Show recent requests from leave, grab code, and business trip requests
       const combinedRequests = [
         ...allLeaveRequests.map((r: any) => ({ ...r, type: 'Leave' as const })),
-        ...allGrabRequests.map((r: any) => ({ ...r, type: 'Grab Code' as const }))
+        ...allGrabRequests.map((r: any) => ({ ...r, type: 'Grab Code' as const })),
+        ...allBusinessTripRequests.map((r: any) => ({ ...r, type: 'Business Trip' as const }))
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
       setRecentRequests(combinedRequests.slice(0, 10));
@@ -319,7 +326,9 @@ const Dashboard: React.FC = () => {
                         <p className="text-sm font-medium text-gray-900">
                           {request.type === 'Leave' 
                             ? (typeof request.leave_type === 'string' ? request.leave_type : request.leave_type?.name || 'Leave Request')
-                            : `${request.code_needed || 1} Grab Code${(request.code_needed || 1) > 1 ? 's' : ''}`
+                            : request.type === 'Business Trip'
+                            ? `Business Trip to ${request.destination || 'Unknown Destination'}`
+                            : `Grab Code Request (${request.code_needed || 1} code${(request.code_needed || 1) > 1 ? 's' : ''})`
                           }
                         </p>
                         <p className="ml-2 text-sm text-gray-500">

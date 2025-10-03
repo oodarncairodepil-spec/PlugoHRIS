@@ -4,7 +4,7 @@ import { Calendar, Clock, FileText, Send, AlertCircle, Upload, Car, Users } from
 import { apiService } from '../services/api';
 import type { LeaveType, CreateGrabCodeRequestData, Service } from '../types';
 
-type RequestType = 'leave' | 'grab' | null;
+type RequestType = 'leave' | 'grab' | 'biztrip' | null;
 
 const LeaveRequest: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +27,74 @@ const LeaveRequest: React.FC = () => {
     meeting_location: '',
     code_needed: ''
   });
+  const [biztripFormData, setBiztripFormData] = useState({
+    destination: '',
+    start_date: '',
+    end_date: '',
+    purpose: '',
+    events: [{
+      event_name: '',
+      start_date: '',
+      end_date: '',
+      start_time: '',
+      end_time: '',
+      agenda: '',
+      location: ''
+    }],
+    participants: [] as string[]
+  });
+
+  // Employee search state for participants
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedParticipants, setSelectedParticipants] = useState<any[]>([]);
+  const [showEmployeeSearch, setShowEmployeeSearch] = useState(false);
+
+  // Handle participant search
+  const handleParticipantSearch = async (searchTerm: string) => {
+    if (searchTerm.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const response = await apiService.getEmployees(1, 10, searchTerm, { status: 'Active' });
+      setSearchResults(response.employees || []);
+    } catch (error) {
+      console.error('Error searching employees:', error);
+      setSearchResults([]);
+    }
+  };
+
+  // Add participant to business trip
+  const addParticipant = (employee: any) => {
+    if (!selectedParticipants.find(p => p.id === employee.id)) {
+      setSelectedParticipants(prev => [...prev, employee]);
+      setBiztripFormData(prev => ({
+        ...prev,
+        participants: [...prev.participants, employee.id]
+      }));
+    }
+    setEmployeeSearch('');
+    setSearchResults([]);
+    setShowEmployeeSearch(false);
+  };
+
+  // Remove participant from business trip
+  const removeParticipant = (employeeId: string) => {
+    setSelectedParticipants(prev => prev.filter(p => p.id !== employeeId));
+    setBiztripFormData(prev => ({
+      ...prev,
+      participants: prev.participants.filter(id => id !== employeeId)
+    }));
+  };
+
+  // Handle employee search input change
+  const handleEmployeeSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmployeeSearch(value);
+    handleParticipantSearch(value);
+  };
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,6 +137,44 @@ const LeaveRequest: React.FC = () => {
     setGrabFormData(prev => ({ ...prev, [name]: value }));
     setError('');
     setSuccess('');
+  };
+
+  const handleBiztripInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setBiztripFormData(prev => ({ ...prev, [name]: value }));
+    setError('');
+    setSuccess('');
+  };
+
+  const handleEventChange = (index: number, field: string, value: string) => {
+    setBiztripFormData(prev => ({
+      ...prev,
+      events: prev.events.map((event, i) => 
+        i === index ? { ...event, [field]: value } : event
+      )
+    }));
+  };
+
+  const addEvent = () => {
+    setBiztripFormData(prev => ({
+      ...prev,
+      events: [...prev.events, {
+        event_name: '',
+        start_date: '',
+        end_date: '',
+        start_time: '',
+        end_time: '',
+        agenda: '',
+        location: ''
+      }]
+    }));
+  };
+
+  const removeEvent = (index: number) => {
+    setBiztripFormData(prev => ({
+      ...prev,
+      events: prev.events.filter((_, i) => i !== index)
+    }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,6 +287,53 @@ const LeaveRequest: React.FC = () => {
     }
   };
 
+  const handleBiztripSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      if (!biztripFormData.destination || !biztripFormData.start_date || !biztripFormData.end_date || !biztripFormData.purpose) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      if (new Date(biztripFormData.start_date) > new Date(biztripFormData.end_date)) {
+        throw new Error('End date must be after start date');
+      }
+
+      // Validate events
+      const validEvents = biztripFormData.events.filter(event => 
+        event.event_name && event.start_date && event.end_date && event.location
+      );
+      
+      if (validEvents.length === 0) {
+        throw new Error('Please add at least one complete event');
+      }
+
+      const requestData = {
+        destination: biztripFormData.destination,
+        start_date: biztripFormData.start_date,
+        end_date: biztripFormData.end_date,
+        purpose: biztripFormData.purpose,
+        events: validEvents,
+        participants: biztripFormData.participants.map(id => ({ employee_id: id }))
+      };
+
+      await apiService.createBusinessTripRequest(requestData);
+      setSuccess('Business trip request submitted successfully!');
+      
+      // Redirect to My Requests page after a short delay
+      setTimeout(() => {
+        navigate('/my-requests');
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit business trip request');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const today = new Date().toISOString().split('T')[0];
 
   // Selection screen
@@ -196,7 +349,7 @@ const LeaveRequest: React.FC = () => {
           <div className="space-y-4">
             <p className="text-gray-600 mb-6">Please select the type of request you want to make:</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 onClick={() => setRequestType('leave')}
                 className="p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group"
@@ -216,6 +369,17 @@ const LeaveRequest: React.FC = () => {
                   <Car className="h-12 w-12 text-gray-400 group-hover:text-blue-500 mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Request Grab Code</h3>
                   <p className="text-sm text-gray-600">Request Grab service codes for business purposes</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setRequestType('biztrip')}
+                className="p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <FileText className="h-12 w-12 text-gray-400 group-hover:text-blue-500 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Request Biz Trip</h3>
+                  <p className="text-sm text-gray-600">Submit a business trip request with events and participants</p>
                 </div>
               </button>
             </div>
@@ -384,6 +548,359 @@ const LeaveRequest: React.FC = () => {
                 min="1"
                 required
               />
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                ) : (
+                  <Send className="h-5 w-5 mr-2" />
+                )}
+                {loading ? 'Submitting...' : 'Submit Request'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Business Trip Request Form
+  if (requestType === 'biztrip') {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center mb-6">
+            <FileText className="h-6 w-6 text-blue-600 mr-2" />
+            <h1 className="text-2xl font-bold text-gray-900">Request Business Trip</h1>
+            <button
+              onClick={() => setRequestType(null)}
+              className="ml-auto text-gray-500 hover:text-gray-700"
+            >
+              ← Back
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+              <span className="text-red-700">{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md flex items-center">
+              <div className="h-5 w-5 bg-green-500 rounded-full mr-2" />
+              <span className="text-green-700">{success}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleBiztripSubmit} className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
+                  Destination *
+                </label>
+                <input
+                  type="text"
+                  id="destination"
+                  name="destination"
+                  value={biztripFormData.destination}
+                  onChange={handleBiztripInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Ex: Jakarta, Surabaya, Singapore"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 mb-2">
+                  Purpose *
+                </label>
+                <input
+                  type="text"
+                  id="purpose"
+                  name="purpose"
+                  value={biztripFormData.purpose}
+                  onChange={handleBiztripInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Ex: Client meeting, Training, Conference"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Trip Period */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
+                  Start Date *
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="date"
+                    id="start_date"
+                    name="start_date"
+                    value={biztripFormData.start_date}
+                    onChange={handleBiztripInputChange}
+                    min={today}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
+                  End Date *
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="date"
+                    id="end_date"
+                    name="end_date"
+                    value={biztripFormData.end_date}
+                    onChange={handleBiztripInputChange}
+                    min={biztripFormData.start_date || today}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Events Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Trip Events</h3>
+                <button
+                  type="button"
+                  onClick={addEvent}
+                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                >
+                  + Add Event
+                </button>
+              </div>
+
+              {biztripFormData.events.map((event, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-md font-medium text-gray-700">Event {index + 1}</h4>
+                    {biztripFormData.events.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeEvent(index)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Event Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={event.event_name}
+                        onChange={(e) => handleEventChange(index, 'event_name', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ex: Client meeting, Site visit"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Agenda
+                      </label>
+                      <textarea
+                        value={event.agenda}
+                        onChange={(e) => handleEventChange(index, 'agenda', e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Describe the agenda or activities for this event"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Start Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={event.start_date}
+                          onChange={(e) => handleEventChange(index, 'start_date', e.target.value)}
+                          min={biztripFormData.start_date}
+                          max={biztripFormData.end_date}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          End Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={event.end_date}
+                          onChange={(e) => handleEventChange(index, 'end_date', e.target.value)}
+                          min={event.start_date || biztripFormData.start_date}
+                          max={biztripFormData.end_date}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          value={event.start_time}
+                          onChange={(e) => handleEventChange(index, 'start_time', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          End Time
+                        </label>
+                        <input
+                          type="time"
+                          value={event.end_time}
+                          onChange={(e) => handleEventChange(index, 'end_time', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Location *
+                      </label>
+                      <input
+                        type="text"
+                        value={event.location}
+                        onChange={(e) => handleEventChange(index, 'location', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ex: Client office, Hotel conference room"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Participants Section */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Participants</h3>
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    You are automatically included as a participant.
+                  </p>
+                </div>
+
+                {/* Add Participants */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Add Additional Participants
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={employeeSearch}
+                      onChange={handleEmployeeSearchChange}
+                      onFocus={() => setShowEmployeeSearch(true)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Search employees by name..."
+                    />
+                    
+                    {/* Search Results Dropdown */}
+                    {showEmployeeSearch && searchResults.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {searchResults.map((employee: any) => (
+                          <button
+                            key={employee.id}
+                            type="button"
+                            onClick={() => addParticipant(employee)}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{employee.full_name}</p>
+                                <p className="text-xs text-gray-500">
+                                  {employee.position} - {employee.department?.name}
+                                </p>
+                              </div>
+                              <Users className="h-4 w-4 text-gray-400" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Close search results when clicking outside */}
+                  {showEmployeeSearch && (
+                    <div 
+                      className="fixed inset-0 z-5" 
+                      onClick={() => {
+                        setShowEmployeeSearch(false);
+                        setSearchResults([]);
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* Selected Participants */}
+                {selectedParticipants.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Participants:</h4>
+                    <div className="space-y-2">
+                      {selectedParticipants.map((participant: any) => (
+                        <div key={participant.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                          <div className="flex items-center">
+                            <Users className="h-4 w-4 text-gray-400 mr-2" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{participant.full_name}</p>
+                              <p className="text-xs text-gray-500">
+                                {participant.position} - {participant.department?.name}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeParticipant(participant.id)}
+                            className="text-red-500 hover:text-red-700 text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Submit Button */}
