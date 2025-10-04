@@ -5,7 +5,7 @@ import Layout from './components/Layout';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import LeaveRequest from './components/LeaveRequest';
-import MyRequests from './components/myrequests';
+import MyRequests from './components/MyRequests';
 import ApproveRequests from './components/ApproveRequests';
 import EmployeeManagement from './components/EmployeeManagement';
 import DepartmentManagement from './components/DepartmentManagement';
