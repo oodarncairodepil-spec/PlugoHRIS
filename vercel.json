@@ -20,11 +20,11 @@
     },
     {
       "src": "/(.*\\.(js|css|svg|png|jpg|jpeg|gif|ico|woff|woff2|ttf|eot))",
-      "dest": "/frontend/dist/$1"
+      "dest": "/$1"
     },
     {
       "src": "/(?!api)(.*)",
-      "dest": "/frontend/dist/index.html"
+      "dest": "/index.html"
     }
   ]
 }
