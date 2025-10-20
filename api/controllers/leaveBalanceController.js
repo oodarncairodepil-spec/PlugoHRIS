@@ -51,17 +51,34 @@ const getLeaveBalanceData = async (req, res) => {
         // Get total approved leave days for each employee
         const employeeBalanceData = [];
         for (const employee of employees) {
-            // Calculate total approved leave days
+            // Calculate total approved leave days with leave type information
             const { data: approvedLeaves, error: leaveError } = await supabase_1.supabaseAdmin
                 .from('leave_requests')
-                .select('days_requested')
+                .select(`
+          days_requested,
+          leave_types!inner(
+            name,
+            max_days_per_year
+          )
+        `)
                 .eq('employee_id', employee.id)
                 .eq('status', 'Approved');
             if (leaveError) {
                 console.error('Error fetching leave requests:', leaveError);
                 continue;
             }
-            const totalBalanceUsed = approvedLeaves?.reduce((sum, leave) => sum + (leave.days_requested || 0), 0) || 0;
+            // Separate additions and subtractions
+            let totalBalanceUsed = 0;
+            let totalAdded = 0;
+            if (approvedLeaves) {
+                for (const leave of approvedLeaves) {
+                    const leaveType = leave.leave_types;
+                    const days = leave.days_requested || 0;
+                    // For now, treat all approved leaves as balance used (subtraction)
+                    // TODO: Add logic to determine if leave type should add or subtract balance
+                    totalBalanceUsed += days;
+                }
+            }
             const monthsJoined = calculateMonthsJoined(employee.start_date);
             employeeBalanceData.push({
                 employee_id: employee.id,
@@ -72,7 +89,8 @@ const getLeaveBalanceData = async (req, res) => {
                 employment_type: employee.employment_type,
                 total_balance: employee.leave_balance || 0,
                 total_balance_used: totalBalanceUsed,
-                current_leave_balance: (employee.leave_balance || 0) - totalBalanceUsed
+                total_added: totalAdded,
+                current_leave_balance: (employee.leave_balance || 0) + totalAdded - totalBalanceUsed
             });
         }
         res.json(employeeBalanceData);
@@ -157,17 +175,38 @@ const calculateLeaveBalances = async (req, res) => {
         const employeeBalanceData = [];
         if (updatedEmployees) {
             for (const employee of updatedEmployees) {
-                // Calculate total approved leave days
+                // Calculate total approved leave days with leave type information
                 const { data: approvedLeaves, error: leaveError } = await supabase_1.supabaseAdmin
                     .from('leave_requests')
-                    .select('days_requested')
+                    .select(`
+            days_requested,
+            leave_types!inner(
+              type,
+              value
+            )
+          `)
                     .eq('employee_id', employee.id)
                     .eq('status', 'Approved');
                 if (leaveError) {
                     console.error('Error fetching leave requests:', leaveError);
                     continue;
                 }
-                const totalBalanceUsed = approvedLeaves?.reduce((sum, leave) => sum + (leave.days_requested || 0), 0) || 0;
+                // Separate additions and subtractions
+                let totalBalanceUsed = 0;
+                let totalAdded = 0;
+                if (approvedLeaves) {
+                    for (const leave of approvedLeaves) {
+                        const leaveType = leave.leave_types;
+                        const days = leave.days_requested || 0;
+                        if (leaveType?.type === 'Addition') {
+                            totalAdded += days;
+                        }
+                        else {
+                            // Default to subtraction for backward compatibility
+                            totalBalanceUsed += days;
+                        }
+                    }
+                }
                 const monthsJoined = calculateMonthsJoined(employee.start_date);
                 employeeBalanceData.push({
                     employee_id: employee.id,
@@ -178,7 +217,8 @@ const calculateLeaveBalances = async (req, res) => {
                     employment_type: employee.employment_type,
                     total_balance: employee.leave_balance || 0,
                     total_balance_used: totalBalanceUsed,
-                    current_leave_balance: (employee.leave_balance || 0) - totalBalanceUsed
+                    total_added: totalAdded,
+                    current_leave_balance: (employee.leave_balance || 0) + totalAdded - totalBalanceUsed
                 });
             }
         }

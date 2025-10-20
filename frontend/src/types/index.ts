@@ -24,6 +24,7 @@ export interface Employee {
   employment_type: 'Permanent' | 'Contract';
   role: 'Employee' | 'Manager' | 'Admin' | 'HR';
   password_changed: boolean;
+  note?: string;
   created_at: string;
   updated_at: string;
 }

@@ -36,6 +36,7 @@ async function setupDatabase() {
           role VARCHAR(20) CHECK (role IN ('Employee', 'Manager', 'Admin')) DEFAULT 'Employee',
           manager_id UUID REFERENCES employees(id),
           password_hash VARCHAR(255) NOT NULL,
+          note TEXT DEFAULT '',
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );

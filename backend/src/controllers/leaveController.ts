@@ -46,9 +46,10 @@ export const createLeaveRequest = async (req: AuthRequest, res: Response) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (startDateObj < today) {
-      return res.status(400).json({ error: 'Start date cannot be in the past' });
-    }
+    // Removed restriction to allow backdated leave requests
+    // if (startDateObj < today) {
+    //   return res.status(400).json({ error: 'Start date cannot be in the past' });
+    // }
 
     if (endDateObj < startDateObj) {
       return res.status(400).json({ error: 'End date cannot be before start date' });

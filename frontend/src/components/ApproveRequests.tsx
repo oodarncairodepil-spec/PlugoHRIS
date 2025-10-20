@@ -23,6 +23,8 @@ const ApproveRequests: React.FC = () => {
   const [selectedRequestType, setSelectedRequestType] = useState<'leave' | 'grab' | 'biztrip' | null>(null);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [approvalCodes, setApprovalCodes] = useState<string[]>([]);
+  const [approvalCodesText, setApprovalCodesText] = useState('');
+  const [selectedGrabCodeNeeded, setSelectedGrabCodeNeeded] = useState<number>(0);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedRequestForDetails, setSelectedRequestForDetails] = useState<CombinedRequest | null>(null);
 
@@ -107,10 +109,11 @@ const ApproveRequests: React.FC = () => {
       setSelectedRequestId(requestId);
       setSelectedRequestType('grab');
       setShowApproveModal(true);
-      // Initialize approval codes array with the correct number of empty strings
+      // Initialize approval codes based on needed count, but use single textarea for input
       const grabRequest = request as GrabCodeRequest & { request_type: 'grab' };
-      const initialCodes = Array(grabRequest.code_needed).fill('');
-      setApprovalCodes(initialCodes);
+      setSelectedGrabCodeNeeded(grabRequest.code_needed);
+      setApprovalCodes([]);
+      setApprovalCodesText('');
     } else if (request?.request_type === 'biztrip') {
       try {
         setProcessingId(requestId);
@@ -135,8 +138,12 @@ const ApproveRequests: React.FC = () => {
   };
 
   const handleGrabCodeApprove = async () => {
-    if (!selectedRequestId || approvalCodes.length === 0 || approvalCodes.some(code => !code.trim())) {
-      setError('Please provide all approval codes');
+    if (!selectedRequestId) {
+      setError('No request selected');
+      return;
+    }
+    if (approvalCodes.length !== selectedGrabCodeNeeded) {
+      setError(`Please provide exactly ${selectedGrabCodeNeeded} codes separated by commas`);
       return;
     }
     
@@ -155,6 +162,8 @@ const ApproveRequests: React.FC = () => {
       setSelectedRequestId(null);
       setSelectedRequestType(null);
       setApprovalCodes([]);
+      setApprovalCodesText('');
+      setSelectedGrabCodeNeeded(0);
     } catch (err: any) {
       console.error('Error approving grab code request:', err);
       setError(err.message || 'Failed to approve grab code request');
@@ -214,6 +223,8 @@ const ApproveRequests: React.FC = () => {
     setSelectedRequestId(null);
     setSelectedRequestType(null);
     setApprovalCodes([]);
+    setApprovalCodesText('');
+    setSelectedGrabCodeNeeded(0);
     setError('');
   };
 
@@ -229,10 +240,16 @@ const ApproveRequests: React.FC = () => {
 
 
 
-  const updateApprovalCode = (index: number, value: string) => {
-    const newCodes = [...approvalCodes];
-    newCodes[index] = value;
-    setApprovalCodes(newCodes);
+
+
+  const handleCodesTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setApprovalCodesText(text);
+    const codes = text
+      .split(',')
+      .map(c => c.trim())
+      .filter(Boolean);
+    setApprovalCodes(codes);
   };
 
   const getStatusIcon = (status: string) => {
@@ -565,21 +582,20 @@ const ApproveRequests: React.FC = () => {
             </div>
             
             <p className="text-sm text-gray-600 mb-4">
-              Please provide the grab codes for this request:
+              Please paste the grab codes for this request, separated by commas:
             </p>
             
-            <div className="space-y-3">
-              {approvalCodes.map((code, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={code}
-                    onChange={(e) => updateApprovalCode(index, e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder={`Grab code ${index + 1}`}
-                  />
-                </div>
-              ))}
+            <div>
+              <textarea
+                rows={3}
+                value={approvalCodesText}
+                onChange={handleCodesTextChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="e.g., CODE1, CODE2, CODE3"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Parsed {approvalCodes.length} {approvalCodes.length === 1 ? 'code' : 'codes'} of {selectedGrabCodeNeeded} needed.
+              </p>
             </div>
             
             <div className="flex justify-end space-x-3 mt-6">
@@ -591,7 +607,7 @@ const ApproveRequests: React.FC = () => {
               </button>
               <button
                 onClick={handleGrabCodeApprove}
-                disabled={approvalCodes.some(code => !code.trim()) || processingId === selectedRequestId}
+                disabled={approvalCodes.length !== selectedGrabCodeNeeded || processingId === selectedRequestId}
                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {processingId === selectedRequestId ? (

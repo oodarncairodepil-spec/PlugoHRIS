@@ -7,14 +7,14 @@ const express_validator_1 = require("express-validator");
 // Validation rules for employee creation
 exports.validateEmployeeCreation = [
     (0, express_validator_1.body)('full_name').trim().isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
-    (0, express_validator_1.body)('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
+    (0, express_validator_1.body)('email').optional({ checkFalsy: true }).isEmail().normalizeEmail().withMessage('Valid email is required'),
     (0, express_validator_1.body)('nik').trim().isLength({ min: 3 }).withMessage('NIK must be at least 3 characters'),
     (0, express_validator_1.body)('department_id').isUUID().withMessage('Department ID must be a valid UUID'),
     (0, express_validator_1.body)('employment_type').isIn(['Permanent', 'Contract']).withMessage('Employment type must be Permanent or Contract'),
     (0, express_validator_1.body)('leave_balance').isInt({ min: 0 }).withMessage('Leave balance must be a positive number'),
     (0, express_validator_1.body)('start_date').isISO8601().withMessage('Valid start date is required'),
-    (0, express_validator_1.body)('role').optional().isIn(['Employee', 'Manager', 'Admin']).withMessage('Role must be Employee, Manager, or Admin'),
-    (0, express_validator_1.body)('manager_id').optional().isUUID().withMessage('Manager ID must be a valid UUID'),
+    (0, express_validator_1.body)('role').optional({ checkFalsy: true }).isIn(['Employee', 'Manager', 'Admin']).withMessage('Role must be Employee, Manager, or Admin'),
+    (0, express_validator_1.body)('manager_id').optional({ checkFalsy: true }).isUUID().withMessage('Manager ID must be a valid UUID'),
     (0, express_validator_1.body)('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be less than 20 characters'),
     (0, express_validator_1.body)('address').optional().trim().isLength({ max: 500 }).withMessage('Address must be less than 500 characters'),
     (0, express_validator_1.body)('position').optional().trim().isLength({ max: 100 }).withMessage('Position must be less than 100 characters'),
@@ -80,7 +80,7 @@ const createEmployee = async (req, res) => {
             .from('employees')
             .insert({
             full_name,
-            email: email.toLowerCase(),
+            email: email ? email.toLowerCase() : null,
             nik,
             department_id,
             employment_type,
@@ -170,7 +170,7 @@ const getAllEmployees = async (req, res) => {
         console.log('Query parameters:', { page, limit, offset, role, department, search, manager, hireDateFrom, hireDateTo, employmentType, status });
         console.log('User role:', req.user?.role);
         const { data: employees, error, count } = await query
-            .order('start_date', { ascending: false })
+            .order('created_at', { ascending: false })
             .range(offset, offset + Number(limit) - 1);
         if (error) {
             console.error('Database query error:', error);

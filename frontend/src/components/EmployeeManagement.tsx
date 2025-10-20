@@ -18,6 +18,7 @@ interface EmployeeFormData {
   manager_id?: string;
   employment_type: 'Permanent' | 'Contract';
   role: 'Employee' | 'Manager' | 'Admin' | 'HR';
+  note: string;
 }
 
 interface Manager {
@@ -58,11 +59,12 @@ const EmployeeManagement: React.FC = () => {
     position: '',
     department: '',
     hire_date: '',
-    leave_balance: 12,
+    leave_balance: 0,
     status: 'Active',
     manager_id: '',
     employment_type: 'Permanent',
-    role: 'Employee'
+    role: 'Employee',
+    note: ''
   });
 
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -192,11 +194,12 @@ const EmployeeManagement: React.FC = () => {
         position: '',
         department: '',
         hire_date: '',
-        leave_balance: 12,
+        leave_balance: 0,
         status: 'Active',
         manager_id: '',
         employment_type: 'Permanent',
-        role: 'Employee'
+        role: 'Employee',
+        note: ''
       });
 
     setEditingEmployee(null);
@@ -221,7 +224,8 @@ const EmployeeManagement: React.FC = () => {
         status: employee.status || 'Active',
         manager_id: employee.manager_id || '',
         employment_type: employee.employment_type || 'Permanent',
-        role: employee.role || 'Employee'
+        role: employee.role || 'Employee',
+        note: employee.note || ''
       });
 
     } else {
@@ -250,7 +254,7 @@ const EmployeeManagement: React.FC = () => {
           full_name: formData.name,
           department_id: formData.department,
           employment_type: formData.employment_type,
-          leave_balance: formData.leave_balance,
+          // leave_balance intentionally omitted from update payload
           role: formData.role,
           manager_id: formData.manager_id || undefined,
           status: formData.status,
@@ -276,7 +280,7 @@ const EmployeeManagement: React.FC = () => {
           nik: formData.nik,
           department_id: formData.department,
           employment_type: formData.employment_type,
-          leave_balance: formData.leave_balance,
+          leave_balance: 0, // system-managed; not editable
           start_date: formData.hire_date,
           role: formData.role,
           manager_id: formData.manager_id || undefined,
@@ -916,22 +920,34 @@ const EmployeeManagement: React.FC = () => {
                     />
                   </div>
 
+                  {/* i.a Note */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Note
+                    </label>
+                    <textarea
+                      name="note"
+                      value={formData.note}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
                   {/* j. Leave Balance */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Leave Balance (Days) *
+                      Leave Balance (Days)
                     </label>
                     <input
                       type="number"
                       name="leave_balance"
                       value={formData.leave_balance}
-                      onChange={handleInputChange}
-                      min="0"
-                      max="365"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
+                      disabled
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Leave balance is managed automatically and cannot be edited.</p>
                   </div>
 
                   {/* k. Employment Type */}

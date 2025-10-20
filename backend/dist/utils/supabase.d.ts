@@ -12,6 +12,7 @@ export interface Employee {
     start_date: string;
     role: 'Employee' | 'Manager' | 'Admin';
     manager_id?: string;
+    note?: string;
     created_at: string;
     updated_at: string;
 }

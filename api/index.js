@@ -43,6 +43,8 @@ const leaveBalance_1 = __importDefault(require("./routes/leaveBalance"));
 const grabCodeRoutes_1 = __importDefault(require("./routes/grabCodeRoutes"));
 const services_1 = __importDefault(require("./routes/services"));
 const requests_1 = __importDefault(require("./routes/requests"));
+const businessTrip_1 = __importDefault(require("./routes/businessTrip"));
+const performanceAppraisal_1 = __importDefault(require("./routes/performanceAppraisal"));
 // API routes
 app.use('/api/auth', auth_1.default);
 app.use('/api/employees', employees_1.default);
@@ -52,6 +54,8 @@ app.use('/api/leave-balance', leaveBalance_1.default);
 app.use('/api/grab-code-requests', grabCodeRoutes_1.default);
 app.use('/api/services', services_1.default);
 app.use('/api/requests', requests_1.default);
+app.use('/api/business-trips', businessTrip_1.default);
+app.use('/api/performance-appraisal', performanceAppraisal_1.default);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);

@@ -23,8 +23,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/" />;
+  const { isAuthenticated, hasRole } = useAuth();
+  if (!isAuthenticated) return <>{children}</>;
+  return hasRole('Admin') ? <Navigate to="/" /> : <Navigate to="/my-requests" />;
 };
 
 function App() {

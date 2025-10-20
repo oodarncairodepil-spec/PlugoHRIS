@@ -8,12 +8,17 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+// Ensure PORT is a number for app.listen
+const PORT = Number(process.env.PORT) || 5000;
 
 // Middleware
 app.use(helmet());
+// Add both 5173 (dev) and 4173 (preview) to allowed origins during development
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? ['https://plugo-hris.vercel.app']
+  : ['http://localhost:5173', 'http://localhost:4173', 'http://localhost:5174'];
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'https://plugo-hris.vercel.app' : 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(morgan('combined'));
@@ -70,7 +75,8 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+// Bind to IPv4 to avoid connection issues on localhost
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Backend server with Grab Code API restarted successfully`);
   console.log(`🚀 Leave Request API server is running on port ${PORT}`);
 });

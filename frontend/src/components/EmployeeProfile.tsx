@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Calendar, Building2, ArrowLeft, MapPin, Briefcase, Edit2, Save, X, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import type { Employee } from '../types';
 
 const EmployeeProfile: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -127,13 +126,8 @@ const EmployeeProfile: React.FC = () => {
     const fetchEmployee = async () => {
       try {
         setLoading(true);
-        const employeeId = id || user?.id;
-        if (!employeeId) {
-          setError('No employee ID provided');
-          return;
-        }
-        
-        const employeeData = await apiService.getEmployee(employeeId);
+        // Fetch current authenticated user's profile to avoid 403 for non-admins
+        const employeeData = await apiService.getProfile();
         setEmployee(employeeData);
         setEditedPhone(employeeData.phone || '');
         setEditedAddress(employeeData.address || '');
@@ -146,9 +140,10 @@ const EmployeeProfile: React.FC = () => {
     };
 
     fetchEmployee();
-  }, [id, user?.id]);
+  }, [user?.id]);
 
   const isOwnProfile = user?.id === employee?.id;
+  const isAdmin = user?.role === 'Admin';
 
   if (loading) {
     return (
@@ -208,7 +203,7 @@ const EmployeeProfile: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">Employee Profile</h1>
             {isOwnProfile && (
               <div className="flex space-x-3">
-                {!isEditing && (
+                {!isEditing && isAdmin && (
                   <button
                     onClick={handleEdit}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"

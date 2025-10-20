@@ -7,17 +7,18 @@ const express_validator_1 = require("express-validator");
 // Validation rules for employee creation
 exports.validateEmployeeCreation = [
     (0, express_validator_1.body)('full_name').trim().isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
-    (0, express_validator_1.body)('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
+    (0, express_validator_1.body)('email').optional({ checkFalsy: true }).isEmail().normalizeEmail().withMessage('Valid email is required'),
     (0, express_validator_1.body)('nik').trim().isLength({ min: 3 }).withMessage('NIK must be at least 3 characters'),
     (0, express_validator_1.body)('department_id').isUUID().withMessage('Department ID must be a valid UUID'),
     (0, express_validator_1.body)('employment_type').isIn(['Permanent', 'Contract']).withMessage('Employment type must be Permanent or Contract'),
     (0, express_validator_1.body)('leave_balance').isInt({ min: 0 }).withMessage('Leave balance must be a positive number'),
     (0, express_validator_1.body)('start_date').isISO8601().withMessage('Valid start date is required'),
-    (0, express_validator_1.body)('role').optional().isIn(['Employee', 'Manager', 'Admin']).withMessage('Role must be Employee, Manager, or Admin'),
-    (0, express_validator_1.body)('manager_id').optional().isUUID().withMessage('Manager ID must be a valid UUID'),
+    (0, express_validator_1.body)('role').optional({ checkFalsy: true }).isIn(['Employee', 'Manager', 'Admin']).withMessage('Role must be Employee, Manager, or Admin'),
+    (0, express_validator_1.body)('manager_id').optional({ checkFalsy: true }).isUUID().withMessage('Manager ID must be a valid UUID'),
     (0, express_validator_1.body)('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be less than 20 characters'),
     (0, express_validator_1.body)('address').optional().trim().isLength({ max: 500 }).withMessage('Address must be less than 500 characters'),
     (0, express_validator_1.body)('position').optional().trim().isLength({ max: 100 }).withMessage('Position must be less than 100 characters'),
+    (0, express_validator_1.body)('note').optional().trim().isLength({ max: 1000 }).withMessage('Note must be less than 1000 characters'),
 ];
 // Create new employee (Admin only)
 const createEmployee = async (req, res) => {
@@ -27,7 +28,11 @@ const createEmployee = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const { full_name, email, nik, department_id, employment_type, leave_balance, start_date, role = 'Employee', manager_id, phone, address, position, } = req.body;
+        const { full_name, email, nik, department_id, employment_type, leave_balance, start_date, role = 'Employee', manager_id, phone, address, position, note, } = req.body;
+        // Ensure we have a non-null, unique email to satisfy DB constraint when email is omitted
+        const finalEmail = (email && typeof email === 'string' && email.trim() !== '')
+            ? email.toLowerCase()
+            : `${String(nik).toLowerCase()}@noemail.local`;
         // Generate random password
         const plainPassword = (0, authController_1.generateRandomPassword)();
         const password_hash = await (0, authController_1.hashPassword)(plainPassword);
@@ -80,7 +85,7 @@ const createEmployee = async (req, res) => {
             .from('employees')
             .insert({
             full_name,
-            email: email.toLowerCase(),
+            email: finalEmail,
             nik,
             department_id,
             employment_type,
@@ -92,13 +97,14 @@ const createEmployee = async (req, res) => {
             phone: phone || '',
             address: address || '',
             position: position || '',
+            note: note || '',
             password_changed: false,
             status: 'Active'
         })
             .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
-        phone, address, position, password_changed,
+        phone, address, position, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)
@@ -130,7 +136,7 @@ const getAllEmployees = async (req, res) => {
             .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
-        phone, address, position, password_changed, manager_id,
+        phone, address, position, note, password_changed, manager_id,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `, { count: 'exact' });
@@ -217,7 +223,7 @@ const getEmployeeById = async (req, res) => {
             .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at, updated_at,
-        phone, address, position, salary, password_changed,
+        phone, address, position, salary, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)
@@ -242,7 +248,7 @@ exports.getEmployeeById = getEmployeeById;
 const updateEmployee = async (req, res) => {
     try {
         const { id } = req.params;
-        const { full_name, department_id, employment_type, leave_balance, role, manager_id, status, phone, address, position, } = req.body;
+        const { full_name, department_id, employment_type, leave_balance, role, manager_id, status, phone, address, position, note, } = req.body;
         // Get current employee data to check for department changes
         const { data: currentEmployee, error: getCurrentError } = await supabase_1.supabaseAdmin
             .from('employees')
@@ -291,12 +297,13 @@ const updateEmployee = async (req, res) => {
             phone: phone || '',
             address: address || '',
             position: position || '',
+            note: note || '',
         })
             .eq('id', id)
             .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, updated_at,
-        phone, address, position, salary, password_changed,
+        phone, address, position, salary, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)

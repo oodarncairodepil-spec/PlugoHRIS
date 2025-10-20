@@ -35,11 +35,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const getNavigationItems = () => {
     const baseItems = [
-      { name: 'Dashboard', href: '/', icon: Home, current: location.pathname === '/' },
       { name: 'My Requests', href: '/my-requests', icon: Calendar, current: location.pathname === '/my-requests' },
       { name: 'Submit Request', href: '/leave-request', icon: Plus, current: location.pathname === '/leave-request' },
       { name: 'My Surveys', href: '/employee-surveys', icon: ClipboardList, current: location.pathname === '/employee-surveys' },
     ];
+
+    if (hasRole('Admin')) {
+      baseItems.unshift({ 
+        name: 'Dashboard', 
+        href: '/', 
+        icon: Home, 
+        current: location.pathname === '/' 
+      });
+    }
 
     if (hasRole(['Manager', 'Admin'])) {
       baseItems.push({ 

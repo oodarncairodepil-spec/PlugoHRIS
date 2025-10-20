@@ -670,7 +670,7 @@ const LeaveRequest: React.FC = () => {
                     name="end_date"
                     value={biztripFormData.end_date}
                     onChange={handleBiztripInputChange}
-                    min={biztripFormData.start_date || today}
+                    min={biztripFormData.start_date || undefined}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -989,7 +989,6 @@ const LeaveRequest: React.FC = () => {
                   name="start_date"
                   value={formData.start_date}
                   onChange={handleInputChange}
-                  min={today}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
@@ -1008,7 +1007,7 @@ const LeaveRequest: React.FC = () => {
                   name="end_date"
                   value={formData.end_date}
                   onChange={handleInputChange}
-                  min={formData.start_date || today}
+                  min={formData.start_date || undefined}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />

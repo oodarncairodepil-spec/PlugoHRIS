@@ -23,7 +23,7 @@
       "dest": "/frontend/dist/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "/(?!api)(.*)",
       "dest": "/frontend/dist/index.html"
     }
   ]

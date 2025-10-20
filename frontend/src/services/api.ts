@@ -1,12 +1,26 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosResponse } from 'axios';
-import type { LoginRequest, LoginResponse, User, Employee, LeaveRequest, LeaveType, ApiResponse, GrabCodeRequest, CreateGrabCodeRequestData, Service, CreateServiceData, UpdateServiceData } from '../types';
+import type { LoginRequest, LoginResponse, Employee, LeaveRequest, LeaveType, ApiResponse, GrabCodeRequest, CreateGrabCodeRequestData, Service, CreateServiceData, UpdateServiceData } from '../types';
+
+// Determine baseURL depending on environment (dev/preview vs production)
+function determineBaseURL(): string {
+  if (typeof window !== 'undefined') {
+    const { hostname } = window.location;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+    if (isLocal) {
+      // Point directly to local API server during any local dev/preview
+      return 'http://localhost:5000/api';
+    }
+  }
+  // In production (Vercel), relative /api hits serverless functions
+  return '/api';
+}
 
 class ApiService {
   private api: AxiosInstance;
 
   constructor() {
-    const baseURL = '/api';
+    const baseURL = determineBaseURL();
     console.log('🔧 ApiService: Initializing with baseURL:', baseURL);
     this.writeDebugLog(`ApiService initialized with baseURL: ${baseURL}`);
     
@@ -68,9 +82,9 @@ class ApiService {
     return response.data;
   }
 
-  async getProfile(): Promise<User> {
-    const response: AxiosResponse<User> = await this.api.get('/auth/profile');
-    return response.data;
+  async getProfile(): Promise<Employee> {
+    const response: AxiosResponse<{ user: Employee }> = await this.api.get('/auth/profile');
+    return response.data.user;
   }
 
   async changePassword(oldPassword: string, newPassword: string): Promise<ApiResponse<null>> {

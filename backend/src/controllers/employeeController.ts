@@ -7,17 +7,18 @@ import { body, validationResult } from 'express-validator';
 // Validation rules for employee creation
 export const validateEmployeeCreation = [
   body('full_name').trim().isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
-  body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('email').optional({ checkFalsy: true }).isEmail().normalizeEmail().withMessage('Valid email is required'),
   body('nik').trim().isLength({ min: 3 }).withMessage('NIK must be at least 3 characters'),
   body('department_id').isUUID().withMessage('Department ID must be a valid UUID'),
   body('employment_type').isIn(['Permanent', 'Contract']).withMessage('Employment type must be Permanent or Contract'),
   body('leave_balance').isInt({ min: 0 }).withMessage('Leave balance must be a positive number'),
   body('start_date').isISO8601().withMessage('Valid start date is required'),
-  body('role').optional().isIn(['Employee', 'Manager', 'Admin']).withMessage('Role must be Employee, Manager, or Admin'),
-  body('manager_id').optional().isUUID().withMessage('Manager ID must be a valid UUID'),
+  body('role').optional({ checkFalsy: true }).isIn(['Employee', 'Manager', 'Admin']).withMessage('Role must be Employee, Manager, or Admin'),
+  body('manager_id').optional({ checkFalsy: true }).isUUID().withMessage('Manager ID must be a valid UUID'),
   body('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be less than 20 characters'),
   body('address').optional().trim().isLength({ max: 500 }).withMessage('Address must be less than 500 characters'),
   body('position').optional().trim().isLength({ max: 100 }).withMessage('Position must be less than 100 characters'),
+  body('note').optional().trim().isLength({ max: 1000 }).withMessage('Note must be less than 1000 characters'),
 ];
 
 // Create new employee (Admin only)
@@ -42,8 +43,13 @@ export const createEmployee = async (req: AuthRequest, res: Response) => {
       phone,
       address,
       position,
-
+      note,
     } = req.body;
+
+    // Ensure we have a non-null, unique email to satisfy DB constraint when email is omitted
+    const finalEmail = (email && typeof email === 'string' && email.trim() !== '')
+      ? email.toLowerCase()
+      : `${String(nik).toLowerCase()}@noemail.local`;
 
     // Generate random password
     const plainPassword = generateRandomPassword();
@@ -107,7 +113,7 @@ export const createEmployee = async (req: AuthRequest, res: Response) => {
       .from('employees')
       .insert({
         full_name,
-        email: email.toLowerCase(),
+        email: finalEmail,
         nik,
         department_id,
         employment_type,
@@ -119,14 +125,14 @@ export const createEmployee = async (req: AuthRequest, res: Response) => {
         phone: phone || '',
         address: address || '',
         position: position || '',
-
+        note: note || '',
         password_changed: false,
         status: 'Active'
       })
       .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
-        phone, address, position, password_changed,
+        phone, address, position, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)
@@ -172,7 +178,7 @@ export const getAllEmployees = async (req: AuthRequest, res: Response) => {
       .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
-        phone, address, position, password_changed, manager_id,
+        phone, address, position, note, password_changed, manager_id,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `, { count: 'exact' });
@@ -279,7 +285,7 @@ export const getEmployeeById = async (req: AuthRequest, res: Response) => {
       .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at, updated_at,
-        phone, address, position, salary, password_changed,
+        phone, address, position, salary, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)
@@ -318,7 +324,7 @@ export const updateEmployee = async (req: AuthRequest, res: Response) => {
       phone,
       address,
       position,
-
+      note,
     } = req.body;
 
     // Get current employee data to check for department changes
@@ -376,13 +382,13 @@ export const updateEmployee = async (req: AuthRequest, res: Response) => {
         phone: phone || '',
         address: address || '',
         position: position || '',
-
+        note: note || '',
       })
       .eq('id', id)
       .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, updated_at,
-        phone, address, position, salary, password_changed,
+        phone, address, position, salary, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)

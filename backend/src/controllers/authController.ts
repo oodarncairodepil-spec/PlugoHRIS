@@ -6,7 +6,11 @@ import { AuthRequest } from '../middleware/auth';
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET!, {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET not configured');
+  }
+  return jwt.sign({ userId }, secret, {
     expiresIn: '24h'
   });
 };
@@ -62,6 +66,11 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Account is inactive' });
     }
 
+    // Guard: missing password_hash should not cause 500
+    if (!employee.password_hash) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
     // Verify password
     const isValidPassword = await bcrypt.compare(password, employee.password_hash);
     if (!isValidPassword) {
@@ -69,7 +78,13 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Generate token
-    const token = generateToken(employee.id);
+    let token: string;
+    try {
+      token = generateToken(employee.id);
+    } catch (e) {
+      console.error('Login token generation error:', e);
+      return res.status(500).json({ error: 'Server misconfiguration: JWT secret missing' });
+    }
 
     res.json({
       message: 'Login successful',
