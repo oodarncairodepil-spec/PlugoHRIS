@@ -18,11 +18,30 @@ app.use((0, helmet_1.default)());
 // Add both 5173 (dev) and 4173 (preview) to allowed origins during development
 const allowedOrigins = process.env.NODE_ENV === 'production'
     ? ['https://plugo-hris.vercel.app']
-    : ['http://localhost:5173', 'http://localhost:4173', 'http://localhost:5174'];
-app.use((0, cors_1.default)({
-    origin: allowedOrigins,
-    credentials: true
-}));
+    : ['http://localhost:5173', 'http://localhost:4173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:4173', 'http://127.0.0.1:5174'];
+
+// Permissive CORS for local dev to ensure Access-Control-Allow-Origin header is present
+const corsOptions = {
+    origin: '*',
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use((0, cors_1.default)(corsOptions));
+// Manual CORS header fallback to ensure Access-Control-Allow-Origin is present
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'content-type,authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204);
+    }
+    next();
+});
+
+// Enable preflight for all routes
+app.options('*', (0, cors_1.default)(corsOptions));
 app.use((0, morgan_1.default)('combined'));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));

@@ -196,6 +196,8 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
     start_date: string;
     end_date: string;
     reason: string;
+    document_links?: string[];
+    employee_id?: string;
   }): Promise<LeaveRequest> {
     const response: AxiosResponse<LeaveRequest> = await this.api.post('/leaves', request);
     return response.data;

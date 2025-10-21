@@ -9,7 +9,8 @@ exports.validateLeaveRequest = [
     (0, express_validator_1.body)('start_date').isISO8601().withMessage('Valid start date is required'),
     (0, express_validator_1.body)('end_date').isISO8601().withMessage('Valid end date is required'),
     (0, express_validator_1.body)('reason').optional().trim().isLength({ min: 1 }).withMessage('Reason must not be empty if provided'),
-    (0, express_validator_1.body)('document_links').optional().isArray().withMessage('Document links must be an array')
+    (0, express_validator_1.body)('document_links').optional().isArray().withMessage('Document links must be an array'),
+    (0, express_validator_1.body)('employee_id').optional().isUUID().withMessage('Valid employee ID is required')
 ];
 // Calculate business days between two dates
 const calculateBusinessDays = (startDate, endDate) => {
@@ -32,8 +33,31 @@ const createLeaveRequest = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const { leave_type_id, start_date, end_date, reason, document_links } = req.body;
-        const employee_id = req.user.id;
+        const { leave_type_id, start_date, end_date, reason, document_links, employee_id: body_employee_id } = req.body;
+        let employee_id = req.user.id;
+        const isAdmin = req.user.role === 'Admin';
+        if (body_employee_id) {
+            if (!isAdmin) {
+                return res.status(403).json({ error: 'Only Admin users can specify employee_id' });
+            }
+            employee_id = body_employee_id;
+        }
+        // Choose DB client based on whether Admin is acting on behalf of another employee
+        const db = (isAdmin && employee_id !== req.user.id) ? supabase_1.supabaseAdmin : supabase_1.supabase;
+        // If Admin is acting on behalf, ensure target employee exists and is Active
+        if (isAdmin && employee_id !== req.user.id) {
+            const { data: targetEmployee, error: targetEmpError } = await supabase_1.supabaseAdmin
+                .from('employees')
+                .select('id, status')
+                .eq('id', employee_id)
+                .single();
+            if (targetEmpError || !targetEmployee) {
+                return res.status(400).json({ error: 'Invalid employee_id' });
+            }
+            if (targetEmployee.status !== 'Active') {
+                return res.status(400).json({ error: 'Employee is not active' });
+            }
+        }
         // Validate dates
         const startDateObj = new Date(start_date);
         const endDateObj = new Date(end_date);
@@ -51,8 +75,8 @@ const createLeaveRequest = async (req, res) => {
         if (days_requested === 0) {
             return res.status(400).json({ error: 'Leave request must include at least one business day' });
         }
-        // Validate leave type exists
-        const { data: leaveType, error: leaveTypeError } = await supabase_1.supabase
+        // Validate leave type exists (use admin client to avoid RLS issues)
+        const { data: leaveType, error: leaveTypeError } = await supabase_1.supabaseAdmin
             .from('leave_types')
             .select('id, name, max_days_per_year')
             .eq('id', leave_type_id)
@@ -62,7 +86,7 @@ const createLeaveRequest = async (req, res) => {
         }
         // Check if employee has sufficient leave balance (for annual leave)
         if (leaveType.name === 'Annual Leave') {
-            const { data: employee } = await supabase_1.supabase
+            const { data: employee } = await db
                 .from('employees')
                 .select('leave_balance')
                 .eq('id', employee_id)
@@ -74,7 +98,7 @@ const createLeaveRequest = async (req, res) => {
             }
         }
         // Check for overlapping leave requests
-        const { data: overlappingRequests } = await supabase_1.supabase
+        const { data: overlappingRequests } = await db
             .from('leave_requests')
             .select('id')
             .eq('employee_id', employee_id)
@@ -84,18 +108,18 @@ const createLeaveRequest = async (req, res) => {
             return res.status(400).json({ error: 'You have overlapping leave requests for these dates' });
         }
         // Create leave request
-        const { data: leaveRequest, error } = await supabase_1.supabase
+        const { data: leaveRequest, error } = await db
             .from('leave_requests')
             .insert({
-            employee_id,
-            leave_type_id,
-            start_date,
-            end_date,
-            days_requested,
-            reason,
-            document_links,
-            status: 'Pending'
-        })
+                employee_id,
+                leave_type_id,
+                start_date,
+                end_date,
+                days_requested,
+                reason,
+                document_links,
+                status: 'Pending'
+            })
             .select(`
         id, start_date, end_date, days_requested, reason, document_links, status, created_at,
         leave_type:leave_type_id(id, name),

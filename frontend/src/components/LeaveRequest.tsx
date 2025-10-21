@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, FileText, Send, AlertCircle, Upload, Car, Users } from 'lucide-react';
 import { apiService } from '../services/api';
 import type { LeaveType, CreateGrabCodeRequestData, Service } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import type { Employee } from '../types';
 
 type RequestType = 'leave' | 'grab' | 'biztrip' | null;
 
 const LeaveRequest: React.FC = () => {
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
   const [requestType, setRequestType] = useState<RequestType>(null);
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -49,52 +52,11 @@ const LeaveRequest: React.FC = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedParticipants, setSelectedParticipants] = useState<any[]>([]);
   const [showEmployeeSearch, setShowEmployeeSearch] = useState(false);
-
-  // Handle participant search
-  const handleParticipantSearch = async (searchTerm: string) => {
-    if (searchTerm.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-
-    try {
-      const response = await apiService.getEmployees(1, 10, searchTerm, { status: 'Active' });
-      setSearchResults(response.employees || []);
-    } catch (error) {
-      console.error('Error searching employees:', error);
-      setSearchResults([]);
-    }
-  };
-
-  // Add participant to business trip
-  const addParticipant = (employee: any) => {
-    if (!selectedParticipants.find(p => p.id === employee.id)) {
-      setSelectedParticipants(prev => [...prev, employee]);
-      setBiztripFormData(prev => ({
-        ...prev,
-        participants: [...prev.participants, employee.id]
-      }));
-    }
-    setEmployeeSearch('');
-    setSearchResults([]);
-    setShowEmployeeSearch(false);
-  };
-
-  // Remove participant from business trip
-  const removeParticipant = (employeeId: string) => {
-    setSelectedParticipants(prev => prev.filter(p => p.id !== employeeId));
-    setBiztripFormData(prev => ({
-      ...prev,
-      participants: prev.participants.filter(id => id !== employeeId)
-    }));
-  };
-
-  // Handle employee search input change
-  const handleEmployeeSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmployeeSearch(value);
-    handleParticipantSearch(value);
-  };
+  // Admin requestor selection state
+  const [requestorSearch, setRequestorSearch] = useState('');
+  const [requestorResults, setRequestorResults] = useState<Employee[]>([]);
+  const [selectedRequestor, setSelectedRequestor] = useState<Employee | null>(null);
+  const [showRequestorSearch, setShowRequestorSearch] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -186,6 +148,82 @@ const LeaveRequest: React.FC = () => {
     const files = Array.from(e.target.files || []);
     setDocumentFiles(files);
   };
+  // Admin requestor search handlers
+  const handleRequestorSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setRequestorSearch(value);
+    if (value.length < 3) {
+      setRequestorResults([]);
+      return;
+    }
+    try {
+      const response = await apiService.getEmployees(1, 10, value, { status: 'Active' });
+      setRequestorResults(response.employees || []);
+    } catch (err) {
+      console.error('Error searching requestors:', err);
+      setRequestorResults([]);
+    }
+  };
+
+  const selectRequestor = (employee: Employee) => {
+    setSelectedRequestor(employee);
+    setShowRequestorSearch(false);
+    setRequestorSearch('');
+    setRequestorResults([]);
+  };
+
+  const clearRequestor = () => {
+    setSelectedRequestor(null);
+    setRequestorSearch('');
+    setRequestorResults([]);
+    setShowRequestorSearch(false);
+  };
+
+  // Handle participant search (biztrip)
+  const handleParticipantSearch = async (searchTerm: string) => {
+    if (searchTerm.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const response = await apiService.getEmployees(1, 10, searchTerm, { status: 'Active' });
+      setSearchResults(response.employees || []);
+    } catch (error) {
+      console.error('Error searching employees:', error);
+      setSearchResults([]);
+    }
+  };
+
+  // Add participant to business trip
+  const addParticipant = (employee: any) => {
+    if (!selectedParticipants.find(p => p.id === employee.id)) {
+      setSelectedParticipants(prev => [...prev, employee]);
+      setBiztripFormData(prev => ({
+        ...prev,
+        participants: [...prev.participants, employee.id]
+      }));
+    }
+    setEmployeeSearch('');
+    setSearchResults([]);
+    setShowEmployeeSearch(false);
+  };
+
+  // Remove participant from business trip
+  const removeParticipant = (employeeId: string) => {
+    setSelectedParticipants(prev => prev.filter(p => p.id !== employeeId));
+    setBiztripFormData(prev => ({
+      ...prev,
+      participants: prev.participants.filter(id => id !== employeeId)
+    }));
+  };
+
+  // Handle employee search input change (biztrip)
+  const handleEmployeeSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmployeeSearch(value);
+    handleParticipantSearch(value);
+  };
 
   const removeDocumentFile = (index: number) => {
     setDocumentFiles(prev => prev.filter((_, i) => i !== index));
@@ -227,7 +265,7 @@ const LeaveRequest: React.FC = () => {
       // In a real implementation, you'd upload files to a storage service first
       const document_links = documentFiles.map(file => file.name);
 
-      const requestData = {
+      const requestData: any = {
         leave_type_id: formData.leave_type_id,
         start_date: formData.start_date,
         end_date: formData.end_date,
@@ -235,9 +273,13 @@ const LeaveRequest: React.FC = () => {
         document_links: document_links.length > 0 ? document_links : undefined
       };
 
+      // If Admin selected a requestor, include employee_id override
+      if (hasRole('Admin') && selectedRequestor?.id) {
+        requestData.employee_id = selectedRequestor.id;
+      }
+
       await apiService.createLeaveRequest(requestData);
       setSuccess('Leave request submitted successfully!');
-      
       // Redirect to My Requests page after a short delay
       setTimeout(() => {
         navigate('/my-requests');
@@ -953,6 +995,64 @@ const LeaveRequest: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Admin: Select Requestor */}
+          {hasRole('Admin') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Requestor (Admin Only)
+              </label>
+              {selectedRequestor ? (
+                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{selectedRequestor.full_name}</p>
+                    <p className="text-xs text-gray-500">{selectedRequestor.email}</p>
+                  </div>
+                  <button type="button" onClick={clearRequestor} className="text-red-500 hover:text-red-700 text-sm">
+                    Clear
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={requestorSearch}
+                    onChange={handleRequestorSearchChange}
+                    onFocus={() => setShowRequestorSearch(true)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Search employees by name (min 3 chars)"
+                  />
+                  {showRequestorSearch && requestorResults.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {requestorResults.map((employee) => (
+                        <button
+                          key={employee.id}
+                          type="button"
+                          onClick={() => selectRequestor(employee)}
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{employee.full_name}</p>
+                              <p className="text-xs text-gray-500">{employee.position} - {employee.department?.name}</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {showRequestorSearch && (
+                    <div
+                      className="fixed inset-0 z-5"
+                      onClick={() => {
+                        setShowRequestorSearch(false);
+                        setRequestorResults([]);
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           {/* Leave Type */}
           <div>
             <label htmlFor="leave_type_id" className="block text-sm font-medium text-gray-700 mb-2">
