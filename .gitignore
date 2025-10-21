@@ -39,3 +39,17 @@ lerna-debug.log*
 
 # Local credentials and test data (do NOT commit)
 credential test.md
+
+# Error output files (ignore)
+error.txt
+error1.txt
+error2.txt
+error3.txt
+error4.txt
+error5.txt
+error6.txt
+
+# Local migration instruction docs (ignore)
+ACTIVE_STATUS_MIGRATION.md
+BUSINESS_TRIP_MIGRATION.md
+DATABASE_MIGRATION.md
