@@ -36,3 +36,6 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Local credentials and test data (do NOT commit)
+credential test.md
