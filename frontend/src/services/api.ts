@@ -195,7 +195,7 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
     leave_type_id: string;
     start_date: string;
     end_date: string;
-    reason: string;
+    reason?: string;
     document_links?: string[];
     employee_id?: string;
   }): Promise<LeaveRequest> {

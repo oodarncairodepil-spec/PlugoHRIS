@@ -269,9 +269,13 @@ const LeaveRequest: React.FC = () => {
         leave_type_id: formData.leave_type_id,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        reason: formData.reason,
         document_links: document_links.length > 0 ? document_links : undefined
       };
+
+      // Include reason only if non-empty to satisfy backend validator optional().trim().isLength({ min: 1 })
+      if (formData.reason && formData.reason.trim().length > 0) {
+        requestData.reason = formData.reason.trim();
+      }
 
       // If Admin selected a requestor, include employee_id override
       if (hasRole('Admin') && selectedRequestor?.id) {
@@ -285,7 +289,9 @@ const LeaveRequest: React.FC = () => {
         navigate('/my-requests');
       }, 1500);
     } catch (err: any) {
-      setError(err.message || 'Failed to submit leave request');
+      const apiError = err?.response?.data;
+      const message = (Array.isArray(apiError?.errors) && apiError.errors[0]?.msg) || apiError?.error || err.message || 'Failed to submit leave request';
+      setError(message);
     } finally {
       setLoading(false);
     }
