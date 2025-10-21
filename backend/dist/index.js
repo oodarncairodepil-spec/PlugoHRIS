@@ -70,9 +70,15 @@ app.use((err, req, res, next) => {
 app.use('*', (req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
-// Bind to IPv4 to avoid connection issues on localhost
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Backend server with Grab Code API restarted successfully`);
-    console.log(`🚀 Leave Request API server is running on port ${PORT}`);
-});
+// Only start the server when running locally (not on Vercel serverless)
+const isVercel = !!process.env.VERCEL;
+if (!isVercel) {
+    // Bind to IPv4 to avoid connection issues on localhost
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`✅ Backend server with Grab Code API restarted successfully`);
+        console.log(`🚀 Leave Request API server is running on port ${PORT}`);
+    });
+}
+// Export the Express app for Vercel serverless
+exports.default = app;
 //# sourceMappingURL=index.js.map

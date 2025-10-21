@@ -10,6 +10,41 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Normalize any error into a safe, user-friendly string to avoid rendering non-string values
+  const getSafeErrorMessage = (err: unknown): string => {
+    const defaultMsg = 'Login failed. Please try again.';
+    try {
+      if (!err) return defaultMsg;
+      const anyErr: any = err as any;
+      const status = anyErr?.response?.status;
+      const data = anyErr?.response?.data;
+      const code = anyErr?.code;
+
+      // Common HTTP status handling
+      if (status === 401 || status === 400) return 'Invalid email or password.';
+      if (status === 429) return 'Too many attempts. Please wait and try again.';
+      if (typeof status === 'number' && status >= 500 && status < 600) return 'Server error. Please try again later.';
+
+      // Axios/network error codes
+      if (code === 'ECONNABORTED') return 'Request timed out. Please check your connection and try again.';
+      if (code === 'ERR_NETWORK') return 'Network error. Please check your connection and try again.';
+
+      // Prefer server-provided string message
+      if (typeof data === 'string' && data.trim()) return data.trim();
+      if (data && typeof data === 'object') {
+        const maybe = (data.message || data.error || data.details);
+        if (typeof maybe === 'string' && maybe.trim()) return maybe.trim();
+      }
+
+      // Fallbacks
+      if (typeof anyErr?.message === 'string' && anyErr.message.trim()) return anyErr.message.trim();
+      if (typeof err === 'string' && (err as string).trim()) return (err as string).trim();
+    } catch (_) {
+      // Swallow errors from parsing and return default
+    }
+    return defaultMsg;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -18,17 +53,7 @@ const Login: React.FC = () => {
     try {
       await login({ email, password });
     } catch (err: any) {
-      // Handle different error formats
-      let errorMessage = 'Login failed. Please try again.';
-      
-      if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (err.message) {
-        errorMessage = err.message;
-      } else if (typeof err === 'string') {
-        errorMessage = err;
-      }
-      
+      const errorMessage = getSafeErrorMessage(err);
       setError(errorMessage);
     } finally {
       setLoading(false);

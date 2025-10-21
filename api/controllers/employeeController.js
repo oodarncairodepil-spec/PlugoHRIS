@@ -18,6 +18,7 @@ exports.validateEmployeeCreation = [
     (0, express_validator_1.body)('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be less than 20 characters'),
     (0, express_validator_1.body)('address').optional().trim().isLength({ max: 500 }).withMessage('Address must be less than 500 characters'),
     (0, express_validator_1.body)('position').optional().trim().isLength({ max: 100 }).withMessage('Position must be less than 100 characters'),
+    (0, express_validator_1.body)('note').optional().trim().isLength({ max: 1000 }).withMessage('Note must be less than 1000 characters'),
 ];
 // Create new employee (Admin only)
 const createEmployee = async (req, res) => {
@@ -27,7 +28,11 @@ const createEmployee = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const { full_name, email, nik, department_id, employment_type, leave_balance, start_date, role = 'Employee', manager_id, phone, address, position, } = req.body;
+        const { full_name, email, nik, department_id, employment_type, leave_balance, start_date, role = 'Employee', manager_id, phone, address, position, note, } = req.body;
+        // Ensure we have a non-null, unique email to satisfy DB constraint when email is omitted
+        const finalEmail = (email && typeof email === 'string' && email.trim() !== '')
+            ? email.toLowerCase()
+            : `${String(nik).toLowerCase()}@noemail.local`;
         // Generate random password
         const plainPassword = (0, authController_1.generateRandomPassword)();
         const password_hash = await (0, authController_1.hashPassword)(plainPassword);
@@ -80,7 +85,7 @@ const createEmployee = async (req, res) => {
             .from('employees')
             .insert({
             full_name,
-            email: email ? email.toLowerCase() : null,
+            email: finalEmail,
             nik,
             department_id,
             employment_type,
@@ -92,13 +97,14 @@ const createEmployee = async (req, res) => {
             phone: phone || '',
             address: address || '',
             position: position || '',
+            note: note || '',
             password_changed: false,
             status: 'Active'
         })
             .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
-        phone, address, position, password_changed,
+        phone, address, position, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)
@@ -130,7 +136,7 @@ const getAllEmployees = async (req, res) => {
             .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at,
-        phone, address, position, password_changed, manager_id,
+        phone, address, position, note, password_changed, manager_id,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `, { count: 'exact' });
@@ -217,7 +223,7 @@ const getEmployeeById = async (req, res) => {
             .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, created_at, updated_at,
-        phone, address, position, salary, password_changed,
+        phone, address, position, salary, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)
@@ -242,7 +248,7 @@ exports.getEmployeeById = getEmployeeById;
 const updateEmployee = async (req, res) => {
     try {
         const { id } = req.params;
-        const { full_name, department_id, employment_type, leave_balance, role, manager_id, status, phone, address, position, } = req.body;
+        const { full_name, department_id, employment_type, leave_balance, role, manager_id, status, phone, address, position, note, } = req.body;
         // Get current employee data to check for department changes
         const { data: currentEmployee, error: getCurrentError } = await supabase_1.supabaseAdmin
             .from('employees')
@@ -291,12 +297,13 @@ const updateEmployee = async (req, res) => {
             phone: phone || '',
             address: address || '',
             position: position || '',
+            note: note || '',
         })
             .eq('id', id)
             .select(`
         id, full_name, email, nik, department_id, employment_type,
         leave_balance, start_date, role, status, updated_at,
-        phone, address, position, salary, password_changed,
+        phone, address, position, salary, note, password_changed,
         manager:manager_id(id, full_name, email),
         department:department_id(id, name)
       `)

@@ -11,11 +11,16 @@ const dotenv_1 = __importDefault(require("dotenv"));
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 5000;
+// Ensure PORT is a number for app.listen
+const PORT = Number(process.env.PORT) || 5000;
 // Middleware
 app.use((0, helmet_1.default)());
+// Add both 5173 (dev) and 4173 (preview) to allowed origins during development
+const allowedOrigins = process.env.NODE_ENV === 'production'
+    ? ['https://plugo-hris.vercel.app']
+    : ['http://localhost:5173', 'http://localhost:4173', 'http://localhost:5174'];
 app.use((0, cors_1.default)({
-    origin: process.env.NODE_ENV === 'production' ? 'https://plugo-hris.vercel.app' : 'http://localhost:5173',
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use((0, morgan_1.default)('combined'));
@@ -65,8 +70,15 @@ app.use((err, req, res, next) => {
 app.use('*', (req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
-app.listen(PORT, () => {
-    console.log(`✅ Backend server with Grab Code API restarted successfully`);
-    console.log(`🚀 Leave Request API server is running on port ${PORT}`);
-});
+// Only start the server when running locally (not on Vercel serverless)
+const isVercel = !!process.env.VERCEL;
+if (!isVercel) {
+    // Bind to IPv4 to avoid connection issues on localhost
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`✅ Backend server with Grab Code API restarted successfully`);
+        console.log(`🚀 Leave Request API server is running on port ${PORT}`);
+    });
+}
+// Export the Express app for Vercel serverless
+exports.default = app;
 //# sourceMappingURL=index.js.map
