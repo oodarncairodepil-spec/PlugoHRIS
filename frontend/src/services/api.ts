@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosResponse } from 'axios';
 import type { LoginRequest, LoginResponse, Employee, LeaveRequest, LeaveType, ApiResponse, GrabCodeRequest, CreateGrabCodeRequestData, Service, CreateServiceData, UpdateServiceData } from '../types';
+import type { Holiday, CreateHolidayData, UpdateHolidayData } from '../types';
 
 // Determine baseURL depending on environment (dev/preview vs production)
 function determineBaseURL(): string {
@@ -455,6 +456,38 @@ async generateNewPassword(id: string): Promise<{ temporary_password: string }> {
 
   async deleteService(id: number): Promise<void> {
     await this.api.delete(`/services/${id}`);
+  }
+
+  // Holidays endpoints
+  async getHolidays(includeInactive = true): Promise<Holiday[]> {
+    const params = new URLSearchParams();
+    if (!includeInactive) params.append('includeInactive', 'false');
+    const response = await this.api.get(`/holidays?${params.toString()}`);
+    return response.data;
+  }
+
+  async getHolidayById(id: number): Promise<Holiday> {
+    const response = await this.api.get(`/holidays/${id}`);
+    return response.data;
+  }
+
+  async createHoliday(data: CreateHolidayData): Promise<Holiday> {
+    const response = await this.api.post('/holidays', data);
+    return response.data;
+  }
+
+  async updateHoliday(id: number, data: UpdateHolidayData): Promise<Holiday> {
+    const response = await this.api.put(`/holidays/${id}`, data);
+    return response.data;
+  }
+
+  async toggleHolidayStatus(id: number): Promise<Holiday> {
+    const response = await this.api.patch(`/holidays/${id}/toggle`);
+    return response.data;
+  }
+
+  async deleteHoliday(id: number): Promise<void> {
+    await this.api.delete(`/holidays/${id}`);
   }
 
   private writeDebugLog(message: string) {

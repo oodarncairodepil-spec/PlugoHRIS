@@ -28,6 +28,51 @@ const calculateBusinessDays = (startDate: Date, endDate: Date): number => {
   return count;
 };
 
+// Helper to format date as YYYY-MM-DD
+const formatYMD = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+// Calculate business days excluding active holidays within the range
+const calculateBusinessDaysExcludingHolidays = async (startDate: Date, endDate: Date): Promise<number> => {
+  // Fetch active holidays in range
+  const { data: holidays, error: holidaysError } = await supabase
+    .from('holidays')
+    .select('date')
+    .eq('is_active', true)
+    .gte('date', formatYMD(startDate))
+    .lte('date', formatYMD(endDate));
+
+  // If fetching holidays fails, fall back to weekend-only calculation
+  if (holidaysError) {
+    console.error('Failed to fetch holidays for business day calculation:', holidaysError);
+    return calculateBusinessDays(startDate, endDate);
+  }
+
+  const holidayDates = new Set((holidays || []).map(h => String(h.date)));
+
+  let count = 0;
+  const current = new Date(startDate);
+  current.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (current <= end) {
+    const dayOfWeek = current.getDay();
+    const ymd = formatYMD(current);
+    const isHoliday = holidayDates.has(ymd);
+    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday) {
+      count++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return count;
+};
+
 // Create leave request
 export const createLeaveRequest = async (req: AuthRequest, res: Response) => {
   try {
@@ -56,7 +101,7 @@ export const createLeaveRequest = async (req: AuthRequest, res: Response) => {
     }
 
     // Calculate days requested
-    const days_requested = calculateBusinessDays(startDateObj, endDateObj);
+    const days_requested = await calculateBusinessDaysExcludingHolidays(startDateObj, endDateObj);
 
     if (days_requested === 0) {
       return res.status(400).json({ error: 'Leave request must include at least one business day' });
@@ -91,13 +136,20 @@ export const createLeaveRequest = async (req: AuthRequest, res: Response) => {
     // Check for overlapping leave requests
     const { data: overlappingRequests } = await supabase
       .from('leave_requests')
-      .select('id')
+      .select('id, start_date, end_date')
       .eq('employee_id', employee_id)
       .in('status', ['Pending', 'Approved'])
-      .or(`start_date.lte.${end_date},end_date.gte.${start_date}`);
+      .lte('start_date', end_date)
+      .gte('end_date', start_date);
+
+    // Debug logging for overlap detection
+    console.log('Overlap check:', { employee_id, start_date, end_date, overlappingRequests });
 
     if (overlappingRequests && overlappingRequests.length > 0) {
-      return res.status(400).json({ error: 'You have overlapping leave requests for these dates' });
+      return res.status(400).json({ 
+        error: 'You have overlapping leave requests for these dates',
+        overlapping_requests: overlappingRequests
+      });
     }
 
     // Create leave request

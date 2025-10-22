@@ -231,11 +231,20 @@ const LeaveRequest: React.FC = () => {
 
   const calculateDays = () => {
     if (formData.start_date && formData.end_date) {
-      const start = new Date(formData.start_date);
-      const end = new Date(formData.end_date);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      return diffDays;
+      // Business-day calculation (Mon-Fri), inclusive of start and end
+      const start = new Date(`${formData.start_date}T00:00:00`);
+      const end = new Date(`${formData.end_date}T00:00:00`);
+      if (start > end) return 0;
+      let count = 0;
+      const current = new Date(start);
+      while (current <= end) {
+        const day = current.getDay();
+        if (day !== 0 && day !== 6) {
+          count += 1;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+      return count;
     }
     return 0;
   };
@@ -253,6 +262,12 @@ const LeaveRequest: React.FC = () => {
 
       if (new Date(formData.start_date) > new Date(formData.end_date)) {
         throw new Error('End date must be after start date');
+      }
+
+      // Require at least one business day (Mon-Fri) in the selected range
+      const businessDays = calculateDays();
+      if (businessDays < 1) {
+        throw new Error('Selected date range must include at least one business day (Mon-Fri).');
       }
 
       // Check if selected leave type requires documents
@@ -290,7 +305,12 @@ const LeaveRequest: React.FC = () => {
       }, 1500);
     } catch (err: any) {
       const apiError = err?.response?.data;
-      const message = (Array.isArray(apiError?.errors) && apiError.errors[0]?.msg) || apiError?.error || err.message || 'Failed to submit leave request';
+      let message = (Array.isArray(apiError?.errors) && apiError.errors[0]?.msg) || apiError?.error || err.message || 'Failed to submit leave request';
+      // If backend provided overlapping request details, append them
+      if (apiError?.overlapping_requests && Array.isArray(apiError.overlapping_requests) && apiError.overlapping_requests.length > 0) {
+        const list = apiError.overlapping_requests.map((r: any) => `${r.id} (${r.start_date} → ${r.end_date})`).join(', ');
+        message += `\nOverlapping requests: ${list}`;
+      }
       setError(message);
     } finally {
       setLoading(false);
@@ -1127,9 +1147,15 @@ const LeaveRequest: React.FC = () => {
               <div className="flex items-center">
                 <Clock className="h-5 w-5 text-blue-600 mr-2" />
                 <span className="text-blue-800 font-medium">
-                  Total days requested: {calculateDays()}
+                  Total business days requested: {calculateDays()}
                 </span>
               </div>
+              {calculateDays() === 0 && (
+                <div className="mt-2 text-red-600 text-sm flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  The selected date range contains no business days (weekend-only). Please adjust your dates.
+                </div>
+              )}
             </div>
           )}
 

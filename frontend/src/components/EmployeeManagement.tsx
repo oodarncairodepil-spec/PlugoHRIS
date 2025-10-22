@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Users, Plus, Search, Trash2, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Users, Plus, Search, Trash2, AlertCircle, CheckCircle, X, LayoutGrid, List } from 'lucide-react';
 // Removed unused import
 import { apiService } from '../services/api';
 import type { Employee } from '../types';
@@ -73,6 +73,7 @@ const EmployeeManagement: React.FC = () => {
   const [managers, setManagers] = useState<Manager[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [generatedPassword, setGeneratedPassword] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -427,14 +428,27 @@ const EmployeeManagement: React.FC = () => {
               <Users className="h-6 w-6 text-blue-600 mr-2" />
               <h1 className="text-2xl font-bold text-gray-900">Employee Management</h1>
             </div>
-            
-            <button
-              onClick={() => openModal()}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Employee
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                className="p-2 rounded-md border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                aria-label={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+                title={viewMode === 'grid' ? 'List View' : 'Grid View'}
+              >
+                {viewMode === 'grid' ? (
+                  <List className="h-5 w-5 text-gray-700" />
+                ) : (
+                  <LayoutGrid className="h-5 w-5 text-gray-700" />
+                )}
+              </button>
+              <button
+                onClick={() => openModal()}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Employee
+              </button>
+            </div>
           </div>
           
           {/* Search */}
@@ -624,45 +638,79 @@ const EmployeeManagement: React.FC = () => {
         )}
 
         {/* Employee List - Mobile Friendly Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {employees.map((employee) => (
-            <div
-              key={employee.id}
-              onClick={() => openModal(employee)}
-              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 cursor-pointer transition-all duration-200 active:scale-95"
-            >
-              <div className="space-y-2">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-gray-900 truncate">
-                      {employee.full_name}
-                    </h3>
-                    <p className="text-sm text-gray-500 truncate">
-                      {employee.position || 'No Position'}
-                    </p>
-                    {employee.manager && (
-                      <p className="text-xs text-blue-600 truncate mt-1">
-                        Manager: {employee.manager.full_name}
+        {viewMode === 'grid' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {employees.map((employee) => (
+              <div
+                key={employee.id}
+                onClick={() => openModal(employee)}
+                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 cursor-pointer transition-all duration-200 active:scale-95"
+              >
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-semibold text-gray-900 truncate">
+                        {employee.full_name}
+                      </h3>
+                      <p className="text-sm text-gray-500 truncate">
+                        {employee.position || 'No Position'}
                       </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end ml-2">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
-                      employee.status === 'Active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {employee.status}
-                    </span>
-                    <p className="text-xs text-gray-400 mt-1 text-right">
-                      {employee.department?.name || 'Unknown Department'}
-                    </p>
+                      {employee.manager && (
+                        <p className="text-xs text-blue-600 truncate mt-1">
+                          Manager: {employee.manager.full_name}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end ml-2">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
+                        employee.status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {employee.status}
+                      </span>
+                      <p className="text-xs text-gray-400 mt-1 text-right">
+                        {employee.department?.name || 'Unknown Department'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* Employee List - Table View */}
+        {viewMode === 'list' && (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manager</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {employees.map((employee) => (
+                  <tr key={employee.id} onClick={() => openModal(employee)} className="hover:bg-gray-50 cursor-pointer">
+                    <td className="px-4 py-2 text-sm text-gray-900">{employee.full_name}</td>
+                    <td className="px-4 py-2 text-sm text-gray-500">{employee.position || 'No Position'}</td>
+                    <td className="px-4 py-2 text-sm text-gray-500">{employee.department?.name || 'Unknown Department'}</td>
+                    <td className="px-4 py-2 text-sm text-gray-500">{employee.manager?.full_name || '-'}</td>
+                    <td className="px-4 py-2">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        employee.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>{employee.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {employees.length === 0 && !loading && (
           <div className="text-center py-12">

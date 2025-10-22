@@ -16,6 +16,7 @@ import EmployeeProfile from './components/EmployeeProfile';
 import PerformanceAppraisal from './components/PerformanceAppraisal';
 import EmployeeSurveys from './components/EmployeeSurveys';
 import AdminRoute from './components/AdminRoute';
+import Holidays from './components/Holidays';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -58,6 +59,7 @@ function App() {
                     <Route path="/leave-balance-checker" element={<AdminRoute><LeaveBalanceChecker /></AdminRoute>} />
                     <Route path="/services" element={<AdminRoute><Services /></AdminRoute>} />
                     <Route path="/leave-types" element={<AdminRoute><LeaveTypes /></AdminRoute>} />
++                   <Route path="/holidays" element={<AdminRoute><Holidays /></AdminRoute>} />
                     <Route path="/performance-appraisal" element={<AdminRoute><PerformanceAppraisal /></AdminRoute>} />
                     <Route path="/employee-surveys" element={<EmployeeSurveys />} />
                     <Route path="/profile" element={<EmployeeProfile />} />

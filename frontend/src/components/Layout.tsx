@@ -69,6 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       { name: 'Departments', href: '/departments', icon: Building2, current: location.pathname === '/departments' },
       { name: 'Services', href: '/services', icon: Cog, current: location.pathname === '/services' },
       { name: 'Leave Types', href: '/leave-types', icon: FileText, current: location.pathname === '/leave-types' },
+      { name: 'Holidays', href: '/holidays', icon: Calendar, current: location.pathname === '/holidays' },
       { name: 'Balance Checker', href: '/leave-balance-checker', icon: Calculator, current: location.pathname === '/leave-balance-checker' },
       { name: 'Performance Appraisal', href: '/performance-appraisal', icon: ClipboardList, current: location.pathname === '/performance-appraisal' }
     ];

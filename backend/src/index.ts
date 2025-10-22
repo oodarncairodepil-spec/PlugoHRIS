@@ -51,6 +51,7 @@ import servicesRoutes from './routes/services';
 import requestsRoutes from './routes/requests';
 import businessTripRoutes from './routes/businessTrip';
 import performanceAppraisalRoutes from './routes/performanceAppraisal';
+import holidaysRoutes from './routes/holidays';
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -63,6 +64,7 @@ app.use('/api/services', servicesRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/api/business-trips', businessTripRoutes);
 app.use('/api/performance-appraisal', performanceAppraisalRoutes);
+app.use('/api/holidays', holidaysRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

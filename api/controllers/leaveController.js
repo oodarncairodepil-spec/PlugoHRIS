@@ -100,12 +100,22 @@ const createLeaveRequest = async (req, res) => {
         // Check for overlapping leave requests
         const { data: overlappingRequests } = await db
             .from('leave_requests')
-            .select('id')
+            .select('id, start_date, end_date')
             .eq('employee_id', employee_id)
             .in('status', ['Pending', 'Approved'])
-            .or(`start_date.lte.${end_date},end_date.gte.${start_date}`);
+            .lte('start_date', end_date)
+            .gte('end_date', start_date);
+        console.log('Overlap check:', {
+            employee_id,
+            start_date,
+            end_date,
+            overlappingRequests
+        });
         if (overlappingRequests && overlappingRequests.length > 0) {
-            return res.status(400).json({ error: 'You have overlapping leave requests for these dates' });
+            return res.status(400).json({ 
+                error: 'You have overlapping leave requests for these dates',
+                overlapping_requests: overlappingRequests
+            });
         }
         // Create leave request
         const { data: leaveRequest, error } = await db

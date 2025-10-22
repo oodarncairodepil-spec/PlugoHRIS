@@ -3,6 +3,16 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+// Also attempt to load env from backend/.env for scripts executed from project root
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
+// Guard: ensure required env vars exist
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables.');
+  console.error('Please set them in .env at project root or backend/.env');
+  process.exit(1);
+}
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
