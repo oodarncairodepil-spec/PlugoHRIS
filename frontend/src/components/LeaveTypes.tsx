@@ -215,13 +215,13 @@ const LeaveTypes: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  step="0.5"
-                  min="0"
+                  step="0.01"
+                  min="0.01"
                   required
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: e.target.value === '' ? '' : parseFloat(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="e.g., 1, 0.5, 2.5"
+                  placeholder="e.g., 1, 0.01, 2.25"
                 />
               </div>
             </div>
